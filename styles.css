@@ -626,7 +626,7 @@ button { font: inherit; color: inherit; }
   height: 84%;
   transform-style: preserve-3d;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform .5s var(--ease);
+  transition: transform .25s ease-out;
 }
 .tee__card {
   position: relative;
@@ -1147,7 +1147,7 @@ button { font: inherit; color: inherit; }
 .js .reveal--clip { opacity: 1; transform: none; clip-path: inset(100% 0 0 0); transition: clip-path 1.3s var(--ease-io); }
 .js .reveal--clip.is-in { clip-path: inset(0 0 0 0); }
 .js .reveal--clip .tee__tilt { transform: scale(1.15) translateY(8%); transition: transform 1.6s var(--ease); }
-.js .reveal--clip.is-in .tee__tilt { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .5s var(--ease); }
+.js .reveal--clip.is-in .tee__tilt { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .25s ease-out; }
 
 /* Visitors who ask for less motion get fades only. Add ?motion=full to the URL to preview everything. */
 @media (prefers-reduced-motion: reduce) {

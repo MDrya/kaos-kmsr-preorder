@@ -836,7 +836,7 @@
     const copies = Math.max(2, Math.ceil((innerWidth * 1.5) / unit) + 1);
     const original = Array.from(track.children);
     for (let i = 1; i < copies; i++) original.forEach((n) => track.append(n.cloneNode(true)));
-    return { track, unit, gap, copies, x: 0, dir: Number(m.dataset.dir || 1) };
+    return { track, unit, gap, copies, x: 0, v: 0, dir: Number(m.dataset.dir || 1) };
   });
   // web fonts change the text width, so re-measure once they're in
   const measureMarquees = () => marquees.forEach((mq) => {
@@ -854,6 +854,9 @@
   let vel = 0;
   let scrollDir = 1;
   let badgeAngle = 0;
+  let badgeSpin = 0;
+  let lastSkew = "";
+  const names = $$(".product__name");
   let starX = 0;
   let starY = 0;
 
@@ -871,11 +874,15 @@
     else if (dy < -3 || y < 120) topbar.classList.remove("is-hidden");
 
     if (!reduced) {
-      root.style.setProperty("--skew", `${clamp(vel * -0.25, -9, 9).toFixed(2)}deg`);
+      // only the product names use the skew, so set it there rather than on :root (cheaper restyle)
+      const skew = `${clamp(vel * -0.15, -5, 5).toFixed(1)}deg`;
+      if (skew !== lastSkew) { names.forEach((n) => n.style.setProperty("--skew", skew)); lastSkew = skew; }
 
       const speed = 0.7 + Math.min(Math.abs(vel) * 0.35, 14);
       marquees.forEach((mq) => {
-        mq.x -= speed * mq.dir * scrollDir;
+        // ease toward the target speed so a change of scroll direction doesn't snap
+        mq.v = lerp(mq.v, speed * mq.dir * scrollDir, 0.06);
+        mq.x -= mq.v;
         if (mq.x <= -mq.unit) mq.x += mq.unit;
         if (mq.x > 0) mq.x -= mq.unit;
         mq.track.style.transform = `translate3d(${mq.x.toFixed(2)}px,0,0)`;
@@ -886,7 +893,8 @@
         starY = lerp(starY, mouse.ny * -30, 0.06);
         starPop = lerp(starPop, 0, 0.12);
         star.style.transform = `translate3d(${starX.toFixed(1)}px, ${(starY + y * 0.3).toFixed(1)}px, 0) scale(${(1 + starPop).toFixed(3)})`;
-        badgeAngle += (0.18 + Math.min(Math.abs(vel) * 0.5, 12)) * scrollDir;
+        badgeSpin = lerp(badgeSpin, (0.18 + Math.min(Math.abs(vel) * 0.5, 12)) * scrollDir, 0.06);
+        badgeAngle += badgeSpin;
         badge.style.transform = `rotate(${badgeAngle.toFixed(2)}deg)`;
       }
 
