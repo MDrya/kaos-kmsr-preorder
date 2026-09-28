@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kaos KMSR — Pre-Order</title>
+  <meta name="description" content="Kaos KMSR ITB pre-order. Regular and Boxy tees, made only if each batch hits 12 orders.">
+  <meta name="theme-color" content="#0c0606">
+  <meta property="og:title" content="Kaos KMSR — Pre-Order">
+  <meta property="og:description" content="Twelve or nothing. Pre-order the KMSR ITB Regular or Boxy tee.">
+  <meta property="og:image" content="assets/tee-back.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    document.documentElement.classList.add("js");
+    try {
+      if (sessionStorage.getItem("kmsr-seen")) document.documentElement.classList.add("no-preload");
+      // ?motion=full forces every animation on (even with "reduce motion" set); ?motion=auto resets
+      if (/[?&]motion=full/.test(location.search)) localStorage.setItem("kmsr-motion", "full");
+      if (/[?&]motion=auto/.test(location.search)) localStorage.removeItem("kmsr-motion");
+      if (localStorage.getItem("kmsr-motion") === "full") document.documentElement.classList.add("full-motion");
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <!-- shared star shape -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="star" viewBox="0 0 100 95">
+      <polygon points="50,0 61.8,35.3 99,35.3 69,57.1 80.4,92.6 50,70.6 19.6,92.6 31,57.1 1,35.3 38.2,35.3"/>
+    </symbol>
+  </svg>
+
+  <div class="preloader" data-preloader aria-hidden="true">
+    <svg class="preloader__star"><use href="#star"/></svg>
+    <p class="preloader__count"><span data-preload-count>00</span><span class="preloader__of">/12</span></p>
+    <p class="preloader__label">KMSR — ITB · Pre-order</p>
+  </div>
+
+  <div class="scrollbar" aria-hidden="true"><span data-scrollbar></span></div>
+  <div class="cursor" data-cursor aria-hidden="true"><span class="cursor__label" data-cursor-label></span></div>
+
+  <a class="skip" href="#order">Skip to order form</a>
+
+  <header class="topbar" data-topbar>
+    <a class="wordmark" href="#top" aria-label="Kaos KMSR home">
+      <svg class="wordmark__star" aria-hidden="true"><use href="#star"/></svg>KMSR<span>—</span>ITB
+    </a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#regular">Regular</a>
+      <a href="#boxy">Boxy</a>
+      <a href="#custom">Custom</a>
+      <a class="topnav__cta" href="#order" data-magnetic>Order</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- 1. HERO -->
+    <section class="hero shell">
+      <button class="hero__star" type="button" data-star aria-label="A star. Try clicking it.">
+        <svg><use href="#star"/></svg>
+      </button>
+
+
+      <p class="eyebrow hero__eyebrow"><span class="live-dot"></span><span>Pre-order open</span><span>Batch 01</span></p>
+
+      <h1 class="hero__title" aria-label="Twelve or nothing.">
+        <span class="hero__line" data-split>Twelve</span>
+        <span class="hero__line hero__line--or" data-split>or</span>
+        <span class="hero__line" data-split>nothing<em>.</em></span>
+      </h1>
+
+      <div class="hero__foot">
+        <ul class="hero__status" data-hero-status aria-label="Batch progress"></ul>
+        <div class="badge" aria-hidden="true">
+          <svg class="badge__ring" viewBox="0 0 200 200">
+            <defs><path id="badge-circle" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0"/></defs>
+            <text><textPath href="#badge-circle" textLength="500">KELUARGA MAHASISWA SENI RUPA ★ PRE-ORDER · BATCH 01 ★</textPath></text>
+          </svg>
+          <img class="badge__logo" src="assets/kmsr-logo.png" alt="">
+        </div>
+        <div class="hero__intro">
+          <p>The official KMSR ITB tee, made to order. Two cuts, one rule: each needs
+            <strong><span data-quota>12</span> orders</strong> before its deadline —
+            or it doesn't get made, and everyone's refunded.</p>
+          <a class="btn btn--red" href="#regular" data-magnetic>See the tees <span class="btn__arrow" data-down aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee" data-marquee aria-hidden="true">
+      <div class="marquee__track" data-marquee-track>
+        <span>Pre-order</span><svg><use href="#star"/></svg>
+        <span>KMSR — ITB</span><svg><use href="#star"/></svg>
+        <span>Twelve or nothing</span><svg><use href="#star"/></svg>
+        <span data-price-text>Rp 129.999</span><svg><use href="#star"/></svg>
+      </div>
+    </div>
+
+    <!-- 2. REGULAR -->
+    <section class="product product--a shell" id="regular" data-product="regular" aria-labelledby="regular-title">
+      <div class="product__head">
+        <span class="product__index">01</span>
+        <h2 class="product__name reveal" id="regular-title" data-field="name" data-split></h2>
+        <p class="product__fit" data-field="fit"></p>
+      </div>
+
+      <figure class="product__media reveal reveal--clip">
+        <button class="tee" type="button" data-tee data-cursor-text="Flip" aria-pressed="false">
+          <span class="tee__tilt">
+            <span class="tee__card">
+              <img class="tee__face tee__face--front" data-field="front" alt="" width="800" height="950">
+              <img class="tee__face tee__face--back" data-field="back" alt="" width="800" height="950">
+            </span>
+          </span>
+          <span class="tee__hint"><span data-tee-side>Front</span> · tap to flip ↻</span>
+        </button>
+        <figcaption data-field="imageNote"></figcaption>
+      </figure>
+
+      <div class="product__info reveal">
+        <p class="product__price" data-field="price"></p>
+        <p class="product__desc" data-field="description"></p>
+        <dl class="specs" data-field="specs"></dl>
+
+        <div class="progress">
+          <p class="progress__count"><span data-field="ordered">00</span><span class="progress__sep">/</span><span data-field="goal">12</span></p>
+          <p class="progress__label">ordered</p>
+          <div class="progress__track" role="progressbar" aria-valuemin="0" data-field="bar"></div>
+          <p class="progress__note" data-field="remaining"></p>
+        </div>
+
+        <div class="countdown" data-field="countdown">
+          <p class="countdown__label" data-field="deadlineLabel"></p>
+          <div class="countdown__clock" aria-hidden="true">
+            <div><span data-unit="d">--</span><small>days</small></div>
+            <div><span data-unit="h">--</span><small>hrs</small></div>
+            <div><span data-unit="m">--</span><small>min</small></div>
+            <div><span data-unit="s">--</span><small>sec</small></div>
+          </div>
+        </div>
+
+        <button class="btn btn--red btn--block" type="button" data-order="regular" data-magnetic>
+          <span data-cta-label>Pre-order Regular</span> <span class="btn__arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      <div class="product__sizes reveal" data-field="sizechartWrap">
+        <h3 class="eyebrow">Size chart <span>· cm, laid flat</span></h3>
+        <div class="sizes-wrap">
+          <div class="table-scroll">
+            <table class="sizes">
+              <thead><tr data-field="sizechartHead"></tr></thead>
+              <tbody data-field="sizechart"></tbody>
+            </table>
+          </div>
+          <div class="fitviz" aria-hidden="true">
+            <svg viewBox="0 0 120 130"><path class="fitviz__tee" data-fitviz d="M42 8C48 18 72 18 78 8L104 18L118 48L100 58L94 48V124H26V48L20 58L2 48L16 18Z"/></svg>
+            <p class="fitviz__label" data-fitviz-label></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BOXY -->
+    <section class="product product--b shell" id="boxy" data-product="boxy" aria-labelledby="boxy-title">
+      <div class="product__head">
+        <span class="product__index">02</span>
+        <h2 class="product__name reveal" id="boxy-title" data-field="name" data-split></h2>
+        <p class="product__fit" data-field="fit"></p>
+      </div>
+
+      <figure class="product__media reveal reveal--clip">
+        <button class="tee" type="button" data-tee data-cursor-text="Flip" aria-pressed="false">
+          <span class="tee__tilt">
+            <span class="tee__card">
+              <img class="tee__face tee__face--front" data-field="front" alt="" width="840" height="800">
+              <img class="tee__face tee__face--back" data-field="back" alt="" width="840" height="800">
+            </span>
+          </span>
+          <span class="tee__hint"><span data-tee-side>Front</span> · tap to flip ↻</span>
+        </button>
+        <figcaption data-field="imageNote"></figcaption>
+      </figure>
+
+      <div class="product__info reveal">
+        <p class="product__price" data-field="price"></p>
+        <p class="product__desc" data-field="description"></p>
+        <dl class="specs" data-field="specs"></dl>
+
+        <div class="progress">
+          <p class="progress__count"><span data-field="ordered">00</span><span class="progress__sep">/</span><span data-field="goal">12</span></p>
+          <p class="progress__label">ordered</p>
+          <div class="progress__track" role="progressbar" aria-valuemin="0" data-field="bar"></div>
+          <p class="progress__note" data-field="remaining"></p>
+        </div>
+
+        <div class="countdown" data-field="countdown">
+          <p class="countdown__label" data-field="deadlineLabel"></p>
+          <div class="countdown__clock" aria-hidden="true">
+            <div><span data-unit="d">--</span><small>days</small></div>
+            <div><span data-unit="h">--</span><small>hrs</small></div>
+            <div><span data-unit="m">--</span><small>min</small></div>
+            <div><span data-unit="s">--</span><small>sec</small></div>
+          </div>
+        </div>
+
+        <button class="btn btn--red btn--block" type="button" data-order="boxy" data-magnetic>
+          <span data-cta-label>Pre-order Boxy</span> <span class="btn__arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      <div class="product__sizes reveal" data-field="sizechartWrap">
+        <h3 class="eyebrow">Size chart <span>· cm, laid flat</span></h3>
+        <div class="sizes-wrap">
+          <div class="table-scroll">
+            <table class="sizes">
+              <thead><tr data-field="sizechartHead"></tr></thead>
+              <tbody data-field="sizechart"></tbody>
+            </table>
+          </div>
+          <div class="fitviz" aria-hidden="true">
+            <svg viewBox="0 0 120 130"><path class="fitviz__tee" data-fitviz d="M44 8C50 17 70 17 76 8L106 14L119 50L103 58L100 50V112H20V50L17 58L1 50L14 14Z"/></svg>
+            <p class="fitviz__label" data-fitviz-label></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee marquee--reverse" data-marquee data-dir="-1" aria-hidden="true">
+      <div class="marquee__track" data-marquee-track>
+        <span>Twelve or nothing</span><svg><use href="#star"/></svg>
+        <span>Scan · pay · upload</span><svg><use href="#star"/></svg>
+        <span>Keluarga Mahasiswa Seni Rupa</span><svg><use href="#star"/></svg>
+      </div>
+    </div>
+
+    <!-- 4. ORDER -->
+    <section class="order" id="order" aria-labelledby="order-title">
+      <div class="order__inner shell">
+        <div class="order__aside">
+          <p class="eyebrow">03 — Order</p>
+          <h2 class="order__title reveal" id="order-title"><span data-split>Lock in</span><br><span data-split>your tee.</span></h2>
+          <ol class="steps">
+            <li>Pick your tee, size and quantity.</li>
+            <li>Scan the QRIS and pay the exact total.</li>
+            <li>Upload the payment screenshot and send.</li>
+          </ol>
+          <p class="order__fine">Your order counts toward the batch once we've confirmed the payment. If the batch doesn't reach <span data-quota>12</span>, you're refunded in full.</p>
+        </div>
+
+        <div class="order__main">
+          <form id="order-form" class="form" action="#" method="post" novalidate>
+            <input type="hidden" name="form_type" value="order">
+            <div class="hp" aria-hidden="true">
+              <label>Leave this empty <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+            </div>
+
+            <fieldset class="field">
+              <legend><span class="field__n">01</span> Tee</legend>
+              <div class="choices" data-product-choices></div>
+            </fieldset>
+
+            <fieldset class="field" data-size-field>
+              <legend><span class="field__n">02</span> Size</legend>
+              <div class="chips" data-size-choices></div>
+            </fieldset>
+
+            <div class="field">
+              <label for="qty"><span class="field__n">03</span> Quantity</label>
+              <div class="stepper">
+                <button type="button" data-step="-1" aria-label="Decrease quantity">−</button>
+                <input id="qty" name="quantity" type="number" min="1" max="10" value="1" inputmode="numeric" required>
+                <button type="button" data-step="1" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="o-name"><span class="field__n">04</span> Name</label>
+                <input id="o-name" name="name" type="text" autocomplete="name" required maxlength="80">
+              </div>
+              <div class="field">
+                <label for="o-wa"><span class="field__n">05</span> WhatsApp number</label>
+                <input id="o-wa" name="whatsapp" type="tel" autocomplete="tel" required
+                       pattern="[+]?[0-9][0-9\s\-]{7,17}" placeholder="08xx xxxx xxxx"
+                       title="Your WhatsApp number, e.g. 0812 3456 7890">
+              </div>
+            </div>
+
+            <div class="pay" data-pay>
+              <div class="pay__total">
+                <span class="eyebrow">06 — Pay exactly</span>
+                <strong data-total>—</strong>
+                <p class="pay__note" data-pay-note></p>
+                <a class="btn btn--ink btn--sm" data-qris-download download>Save QR image</a>
+              </div>
+              <figure class="pay__qr">
+                <img data-qris alt="QRIS code for payment" width="260" height="260">
+                <figcaption data-qris-merchant></figcaption>
+              </figure>
+            </div>
+
+            <div class="field">
+              <label for="o-proof"><span class="field__n">07</span> Payment screenshot</label>
+              <label class="drop" data-drop>
+                <input id="o-proof" name="payment_proof" type="file" accept="image/*,application/pdf" required>
+                <span class="drop__empty">
+                  <strong>Tap to upload</strong> or drop the screenshot here
+                  <small>JPG, PNG or PDF</small>
+                </span>
+                <span class="drop__file" hidden>
+                  <img data-drop-thumb alt="">
+                  <span data-drop-name></span>
+                  <small>Tap to change</small>
+                </span>
+              </label>
+            </div>
+
+            <div class="field">
+              <label for="o-notes"><span class="field__n">08</span> Notes <span class="optional">optional</span></label>
+              <textarea id="o-notes" name="notes" rows="2" maxlength="600"></textarea>
+            </div>
+
+            <button class="btn btn--ink btn--block btn--lg" type="submit" data-magnetic>
+              <span data-submit-label>Place pre-order</span> <span class="btn__arrow" aria-hidden="true">→</span>
+            </button>
+            <p class="form__status" role="status" aria-live="polite" data-status></p>
+          </form>
+
+          <div class="done" data-done hidden tabindex="-1">
+            <svg class="done__star" aria-hidden="true"><use href="#star"/></svg>
+            <p class="eyebrow">Received</p>
+            <h3 class="done__title">You're on<br>the list.</h3>
+            <p class="done__ref" data-done-summary></p>
+            <p>We'll check your payment and confirm on WhatsApp. Keep your order code — it's how we match your transfer.</p>
+            <button type="button" class="btn btn--ink" data-reset>Place another order</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. CUSTOM INTEREST -->
+    <section class="custom shell" id="custom" aria-labelledby="custom-title">
+      <div class="custom__frame reveal">
+        <div class="custom__intro">
+          <p class="tag">Interest only — not an order</p>
+          <h2 class="custom__title" id="custom-title">Want something <em>else?</em></h2>
+          <p>Different colour, long sleeve, another cut — tell us. This isn't a guaranteed order and you don't pay anything now.</p>
+          <p>If enough people ask for the same custom variant, we'll open it as its own batch. It still has to hit <strong><span data-quota>12</span> orders</strong> before it's made.</p>
+        </div>
+
+        <form id="custom-form" class="form form--compact" action="#" method="post">
+          <input type="hidden" name="form_type" value="custom">
+          <div class="hp" aria-hidden="true">
+            <label>Leave this empty <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+          </div>
+
+          <div class="field">
+            <label for="c-want">What do you want?</label>
+            <textarea id="c-want" name="custom_request" rows="3" required maxlength="600"
+                      placeholder="e.g. Boxy tee in white, same print"></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="c-size">Size</label>
+              <select id="c-size" name="size" required data-custom-sizes></select>
+            </div>
+            <div class="field">
+              <label for="c-name">Name</label>
+              <input id="c-name" name="name" type="text" autocomplete="name" required maxlength="80">
+            </div>
+          </div>
+          <div class="field">
+            <label for="c-wa">WhatsApp number</label>
+            <input id="c-wa" name="whatsapp" type="tel" autocomplete="tel" required
+                   pattern="[+]?[0-9][0-9\s\-]{7,17}" placeholder="08xx xxxx xxxx"
+                   title="Your WhatsApp number, e.g. 0812 3456 7890">
+          </div>
+          <button class="btn btn--ghost btn--block" type="submit">Register interest</button>
+          <p class="form__status" role="status" aria-live="polite" data-status></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- 6. FOOTER -->
+  <footer class="footer shell">
+    <div class="footer__cols">
+      <div>
+        <h3 class="eyebrow">Refunds &amp; cancellation</h3>
+        <p>If a batch doesn't reach <span data-quota>12</span> orders by its deadline, it's cancelled and every order in it is fully refunded to you. We'll reach you on the WhatsApp number you gave us.</p>
+      </div>
+      <div data-contacts-wrap>
+        <h3 class="eyebrow">Questions</h3>
+        <ul class="footer__links" data-contacts></ul>
+      </div>
+    </div>
+    <p class="footer__mark" data-footer-mark aria-hidden="true"><span data-split>KMSR—ITB</span></p>
+    <p class="footer__base eyebrow"><span>© <span data-year>2026</span> Keluarga Mahasiswa Seni Rupa ITB</span><span>Made to order. Never overstocked.</span></p>
+  </footer>
+
+  <div class="toast" data-toast role="status" aria-live="polite"></div>
+
+  <noscript><p class="noscript">This page needs JavaScript to take orders.</p></noscript>
+
+  <script src="config.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
