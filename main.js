@@ -25,9 +25,13 @@
   const priceOf = (key, size) => C.products[key].price + surchargeOf(key, size);
   const bigSizesOf = (key) => (C.products[key].sizes || []).filter((s) => surchargeOf(key, s) > 0);
   const plus = (n) => "+" + new Intl.NumberFormat("id-ID").format(n);
+  const sleevesOf = (key) => C.products[key].sleeves || [];
+  const sleeveOf = (key, name) => sleevesOf(key).find((o) => o.name === name);
+  const sleeveExtra = (key, name) => (sleeveOf(key, name) || {}).extra || 0;
+  const hasExtras = (key) => bigSizesOf(key).length > 0 || sleevesOf(key).some((o) => o.extra > 0);
   const choiceMeta = (key) => {
     const p = C.products[key];
-    return (bigSizesOf(key).length ? "from " : "") + money(p.price) + (isClosed(key) ? " · closed" : "");
+    return (hasExtras(key) ? "from " : "") + money(p.price) + (isClosed(key) ? " · closed" : "");
   };
 
   const goalOf = (key) => C.products[key].goal ?? C.quota;
@@ -71,8 +75,9 @@
     const big = bigSizesOf(key);
     const base = (p.sizes || []).filter((s) => !big.includes(s));
     const baseLabel = base.length > 1 ? `${base[0]}–${base[base.length - 1]}` : base[0] || "";
-    f("priceNote").textContent = [baseLabel, ...big.map((s) => `${s} ${plus(surchargeOf(key, s))}`)].filter(Boolean).join(" · ");
-    f("priceNote").hidden = !big.length;
+    const sleeveNotes = sleevesOf(key).filter((o) => o.extra > 0).map((o) => `${o.name} ${plus(o.extra)}`);
+    f("priceNote").textContent = [baseLabel, ...big.map((s) => `${s} ${plus(surchargeOf(key, s))}`), ...sleeveNotes].filter(Boolean).join(" · ");
+    f("priceNote").hidden = !hasExtras(key);
     f("description").textContent = p.description;
 
     f("front").src = p.images.front;
@@ -188,7 +193,8 @@
     const cols = chart.columns;
     const maxW = Math.max(...chart.rows.map((r) => r[1]));
     const maxL = Math.max(...chart.rows.map((r) => r[2]));
-    let selected = Math.min(1, chart.rows.length - 1);
+    const m = chart.rows.findIndex((r) => r[0] === "M");
+    let selected = m >= 0 ? m : Math.min(1, chart.rows.length - 1);
 
     const show = (i) => {
       const r = chart.rows[i];
@@ -279,6 +285,8 @@
   const qty = $("#qty");
   const sizeField = $("[data-size-field]", form);
   const sizeChoices = $("[data-size-choices]", form);
+  const sleeveField = $("[data-sleeve-field]", form);
+  const sleeveChoices = $("[data-sleeve-choices]", form);
   const totalEl = $("[data-total]", form);
   const proofInput = $("#o-proof");
   const drop = $("[data-drop]", form);
@@ -324,6 +332,7 @@
   }
 
   let renderedSizesFor = null;
+  let renderedSleevesFor = null;
   let lastTotal = "";
   function updateOrderForm() {
     const key = currentKey();
@@ -347,10 +356,28 @@
     sizeField.hidden = !hasSizes;
     sizeField.disabled = !hasSizes;
 
+    // sleeve options (only products that define them)
+    const sleeves = key ? sleevesOf(key) : [];
+    const sleeveSig = key ? key + ":" + sleeves.map((o) => o.name).join("|") : "";
+    if (sleeveSig !== renderedSleevesFor) {
+      const prevSleeve = $('input[name="sleeve"]:checked', form)?.value;
+      sleeveChoices.innerHTML = sleeves.map((o, i) => {
+        const on = prevSleeve ? o.name === prevSleeve : i === 0;
+        return `<label class="chip"><input type="radio" name="sleeve" value="${esc(o.name)}" required${on ? " checked" : ""}><span style="--i:${i}">${esc(o.name)}${o.extra ? `<small>${plus(o.extra)}</small>` : ""}</span></label>`;
+      }).join("");
+      renderedSleevesFor = sleeveSig;
+    }
+    sleeveField.hidden = sleeves.length === 0;
+    sleeveField.disabled = sleeves.length === 0;
+
+    // keep the step numbers in order when a step is hidden
+    $$(".field__n", form).filter((el) => !el.closest("[hidden]")).forEach((el, i) => (el.textContent = pad(i + 1)));
+
     const n = clampQty();
     const p = key && C.products[key];
     const size = $('input[name="size"]:checked', form)?.value;
-    const total = p ? money(priceOf(key, size) * n) : "Pick a tee";
+    const sleeve = $('input[name="sleeve"]:checked', form)?.value;
+    const total = p ? money((priceOf(key, size) + sleeveExtra(key, sleeve)) * n) : "Pick a tee";
     if (total !== lastTotal) {
       totalEl.textContent = total;
       if (lastTotal && !reduced) {
@@ -379,7 +406,7 @@
   qty.addEventListener("input", updateOrderForm);
   qty.addEventListener("blur", () => { qty.value = clampQty(); updateOrderForm(); });
   form.addEventListener("change", (e) => {
-    if (e.target.name === "product" || e.target.name === "size") updateOrderForm();
+    if (["product", "size", "sleeve"].includes(e.target.name)) updateOrderForm();
     e.target.classList.remove("is-invalid");
   });
   form.addEventListener("input", (e) => e.target.classList.remove("is-invalid"));
@@ -449,7 +476,10 @@
     qty.value = n;
     const fd = new FormData(form);
     const size = fd.get("size") || "One size";
-    const unit = priceOf(key, size);
+    const sleeve = sleeveOf(key, fd.get("sleeve"));
+    const unit = priceOf(key, size) + (sleeve ? sleeve.extra : 0);
+    // the sheet's Size column is short, so long sleeve goes in as e.g. "M (Long)"
+    const sizeLabel = sleeve && sleeve.tag ? `${size} (${sleeve.tag})` : size;
     const total = unit * n;
     const ref = makeRef();
 
@@ -463,7 +493,8 @@
         _gotcha: fd.get("_gotcha") || "",
         order_ref: ref,
         product: p.name,
-        size,
+        size: sizeLabel,
+        sleeve: sleeve ? sleeve.name : "",
         quantity: n,
         unit_price: money(unit),
         total: money(total),
@@ -472,7 +503,7 @@
         notes: String(fd.get("notes") || "").trim(),
         payment_proof: await fileToPayload(proofInput.files[0]),
       });
-      showDone({ ref, p, size, n, total });
+      showDone({ ref, p, size: sleeve && sleeve.extra ? `${size} · ${sleeve.name}` : size, n, total });
       setStatus(status, "", false);
     } catch (err) {
       setStatus(status, err.message, true);
@@ -508,6 +539,7 @@
     form.reset();
     showFile();
     renderedSizesFor = null;
+    renderedSleevesFor = null;
     updateOrderForm();
     done.hidden = true;
     form.hidden = false;

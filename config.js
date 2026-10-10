@@ -38,7 +38,7 @@ window.KMSR_CONFIG = {
     regular: {
       name: "Regular Tee",
       shortName: "Regular",
-      fit: "Regular fit · S–4XL",
+      fit: "Regular fit · XS–4XL · short or long sleeve",
       price: 94999, // base price for S–XL
       deadline: null, // TODO e.g. "2026-10-12T23:59:00+07:00"
       description:
@@ -46,13 +46,20 @@ window.KMSR_CONFIG = {
       specs: [
         ["Fabric", "Combed 24s Biowash"],
         ["Fit", "Regular"],
+        ["Sleeve", "Short, or long +7.500"],
         ["Colour", "Black"],
         ["Print", "Front chest + full back"],
       ],
-      sizes: ["S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+      sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+      // Sleeve options (extra = added to the price). "tag" is what goes in the sheet's Size column.
+      sleeves: [
+        { name: "Short sleeve", extra: 0 },
+        { name: "Long sleeve", extra: 7500, tag: "Long" },
+      ],
       sizeChart: {
         columns: ["Size", "Width", "Length"],
         rows: [
+          ["XS", 42, 65],
           ["S", 45, 68],
           ["M", 48, 70],
           ["L", 51, 72],
@@ -70,7 +77,7 @@ window.KMSR_CONFIG = {
     boxy: {
       name: "Boxy Tee",
       shortName: "Boxy",
-      fit: "Oversize boxy · S–XL",
+      fit: "Oversize boxy · XS–XL",
       price: 99999, // base price for S–XL
       deadline: null, // TODO
       description:
@@ -81,10 +88,11 @@ window.KMSR_CONFIG = {
         ["Colour", "Black"],
         ["Print", "Front chest + full back"],
       ],
-      sizes: ["S", "M", "L", "XL"],
+      sizes: ["XS", "S", "M", "L", "XL"],
       sizeChart: {
         columns: ["Size", "Width", "Length", "Sleeve"],
         rows: [
+          ["XS", 51, 60, "—"], // TODO XS sleeve length
           ["S", 53, 62, 20],
           ["M", 55, 64, 22],
           ["L", 57, 66, 24],
@@ -127,5 +135,5 @@ window.KMSR_CONFIG = {
     line: "",
   },
 
-  customSizes: ["S", "M", "L", "XL", "2XL", "3XL", "4XL", "Not sure yet"],
+  customSizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "Not sure yet"],
 };

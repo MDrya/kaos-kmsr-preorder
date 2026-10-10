@@ -949,6 +949,7 @@ button { font: inherit; color: inherit; }
 }
 .chip small { display: block; margin-top: 1px; font-family: var(--mono); font-size: 10px; font-weight: 400; letter-spacing: 0; opacity: .7; line-height: 1; }
 .chip span:has(small) { padding-block: 6px; line-height: 1.05; }
+.chips--wide .chip span { min-width: 132px; }
 .chip:hover span { transform: translateY(-2px); }
 .chip input:checked + span { background: var(--black); color: var(--ink); transform: scale(1.06); }
 .chips.is-in .chip span { animation: chip-in .5s var(--ease) both; animation-delay: calc(var(--i) * 40ms); }
