@@ -1154,8 +1154,19 @@ button { font: inherit; color: inherit; }
 
 .js .reveal { opacity: 0; transform: translateY(32px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
 .js .reveal.is-in { opacity: 1; transform: none; }
-.js .reveal--clip { opacity: 1; transform: none; clip-path: inset(100% 0 0 0); transition: clip-path 1.3s var(--ease-io); }
-.js .reveal--clip.is-in { clip-path: inset(0 0 0 0); }
+/* a curtain wipes off the panel (instead of clip-path, which hides the panel from the reveal observer) */
+.js .reveal--clip { opacity: 1; transform: none; }
+.js .reveal--clip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--bg);
+  transform-origin: 50% 0;
+  transition: transform 1.3s var(--ease-io);
+  pointer-events: none;
+}
+.js .reveal--clip.is-in::after { transform: scaleY(0); }
 .js .reveal--clip .tee__tilt { transform: scale(1.15) translateY(8%); transition: transform 1.6s var(--ease); }
 .js .reveal--clip.is-in .tee__tilt { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .25s ease-out; }
 
@@ -1167,7 +1178,8 @@ button { font: inherit; color: inherit; }
   :root:not(.full-motion).js .reveal,
   :root:not(.full-motion).js .hero__foot,
   :root:not(.full-motion).js .hero__eyebrow { transform: none; }
-  :root:not(.full-motion).js .reveal--clip { clip-path: none; opacity: 0; transition: opacity 1s; }
+  :root:not(.full-motion).js .reveal--clip { opacity: 0; transition: opacity 1s; }
+  :root:not(.full-motion).js .reveal--clip::after { display: none; }
   :root:not(.full-motion).js .reveal--clip.is-in { opacity: 1; }
   :root:not(.full-motion) .char { transform: none !important; transition: none !important; }
   :root:not(.full-motion) .hero__star svg,

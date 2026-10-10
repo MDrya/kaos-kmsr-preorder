@@ -74,7 +74,7 @@ When the time passes, that tee's order button and form option close automaticall
 
 Put front and back photos in `assets/` and point `images.front` / `images.back` at them.
 Set `imageNote: ""` to remove the "Design preview" label. The current images are cut
-from the design mockup; the Boxy ones are generated previews of that same print.
+from the vendor's design mockups (Regular and Oversize Boxy).
 
 ## Motion
 
