@@ -44,7 +44,7 @@ window.KMSR_CONFIG = {
       description:
         "The everyday cut. Chest logo up front, the full KMSR star across the back. Made only if the batch fills.",
       specs: [
-        ["Fabric", "TBA"], // TODO real fabric, e.g. "Cotton Combed 24s"
+        ["Fabric", "Combed 24s Biowash"],
         ["Fit", "Regular"],
         ["Colour", "Black"],
         ["Print", "Front chest + full back"],
@@ -76,7 +76,7 @@ window.KMSR_CONFIG = {
       description:
         "Wide, cropped, dropped shoulders. Same print, heavier attitude. Made only if the batch fills.",
       specs: [
-        ["Fabric", "TBA"], // TODO
+        ["Fabric", "Combed 24s Biowash"],
         ["Fit", "Oversize boxy"],
         ["Colour", "Black"],
         ["Print", "Front chest + full back"],

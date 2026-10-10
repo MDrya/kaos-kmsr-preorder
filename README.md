@@ -104,7 +104,6 @@ Then open http://localhost:5173.
 ## Still to fill in
 
 - [ ] Deadline date/time for each tee
-- [ ] Fabric/material (`specs` → "Fabric" in `config.js`)
 - [ ] QRIS image (`payment.qrisImage`)
 - [ ] Apps Script URL (`form.endpoint`) + one test order
 - [ ] Real photos, when ready
