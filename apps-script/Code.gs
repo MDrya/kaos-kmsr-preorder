@@ -38,7 +38,12 @@ function doPost(e) {
       return json({ ok: true });
     }
 
-    if (!data.name || !data.whatsapp || !data.product) {
+    // One order can hold several tees ("items"); older pages send a single flat tee.
+    const items = Array.isArray(data.items) && data.items.length
+      ? data.items.slice(0, 10)
+      : [{ product: data.product, size: data.size, quantity: data.quantity, unit_price: data.unit_price, total: data.total }];
+
+    if (!data.name || !data.whatsapp || items.some(function (it) { return !it || !it.product; })) {
       return json({ ok: false, error: "Missing required fields." });
     }
 
@@ -59,20 +64,28 @@ function doPost(e) {
       return json({ ok: false, error: "Please attach your payment screenshot." });
     }
 
-    sheet(ss, ORDERS_SHEET, ORDER_HEADERS).appendRow([
-      new Date(),
-      clean(data.order_ref, 20),
-      clean(data.product, 40),
-      clean(data.size, 10),
-      Number(data.quantity) || 1,
-      clean(data.unit_price, 20),
-      clean(data.total, 20),
-      clean(data.name, 80),
-      text(clean(data.whatsapp, 20)),
-      clean(data.notes, 600),
-      proofUrl,
-      "Pending",
-    ]);
+    // one row per tee, all sharing the order ref, name and payment proof
+    const now = new Date();
+    let notes = clean(data.notes, 600);
+    if (items.length > 1) notes = ("Order total " + clean(data.order_total, 20) + " (" + items.length + " lines). " + notes).trim();
+    const rows = items.map(function (it, i) {
+      return [
+        now,
+        clean(data.order_ref, 20),
+        clean(it.product, 40),
+        clean(it.size, 20),
+        Math.max(1, Math.min(10, Number(it.quantity) || 1)),
+        clean(it.unit_price, 20),
+        clean(it.total, 20),
+        clean(data.name, 80),
+        text(clean(data.whatsapp, 20)),
+        i === 0 ? notes : "",
+        proofUrl,
+        "Pending",
+      ];
+    });
+    const sh = sheet(ss, ORDERS_SHEET, ORDER_HEADERS);
+    sh.getRange(sh.getLastRow() + 1, 1, rows.length, ORDER_HEADERS.length).setValues(rows);
     return json({ ok: true });
   } catch (err) {
     return json({ ok: false, error: "Server error. Please try again." });

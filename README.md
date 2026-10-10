@@ -50,6 +50,10 @@ While `form.endpoint` isn't set, submitting on `localhost` runs in demo mode (no
 the payload is logged to the browser console) so you can preview the success screen.
 On the real domain it shows "Ordering isn't connected yet".
 
+An order can hold several tees (e.g. a Regular and a Boxy). Each tee becomes its own
+row; the rows share the order code, name, WhatsApp and payment screenshot, and the first
+row's Notes starts with the order total. Confirm each row as usual.
+
 Each order row has: time, order code (e.g. `KM-4F2QAB`, also shown to the buyer),
 product, size, qty, price, total, name, WhatsApp, notes, a link to the payment
 screenshot, and a Status column (starts as `Pending`).

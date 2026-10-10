@@ -127,10 +127,10 @@
 
     // CTA
     $("[data-order]", sec).addEventListener("click", () => {
-      selectProduct(key);
-      $("#order-form").scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+      const item = selectProduct(key);
+      item.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
       setTimeout(() => {
-        const first = $('#order-form input[name="size"]:not(:disabled)') || $("#o-name");
+        const first = $("input[data-size]:not(:disabled)", item) || $("#o-name");
         first.focus({ preventScroll: true });
       }, 700);
     });
@@ -222,14 +222,8 @@
       btn.disabled = true;
       $("[data-cta-label]", btn).textContent = "Pre-order closed";
     }
-    const radio = $(`#order-form input[name="product"][data-key="${key}"]`);
-    if (radio) {
-      radio.disabled = true;
-      radio.checked = false;
-      $(".choice__meta", radio.closest(".choice")).textContent = choiceMeta(key);
-    }
+    closeInForm(key);
     renderHeroStatus();
-    updateOrderForm();
   }
 
   function setUnit(el, value) {
@@ -279,33 +273,17 @@
   loadLiveCounts();
 
   /* ---------------------------------------------------------------
-     Order form
+     Order form — a small basket: one card per tee, one payment
      --------------------------------------------------------------- */
   const form = $("#order-form");
-  const qty = $("#qty");
-  const sizeField = $("[data-size-field]", form);
-  const sizeChoices = $("[data-size-choices]", form);
-  const sleeveField = $("[data-sleeve-field]", form);
-  const sleeveChoices = $("[data-sleeve-choices]", form);
+  const itemsEl = $("[data-items]", form);
+  const addBtn = $("[data-add-item]", form);
   const totalEl = $("[data-total]", form);
   const proofInput = $("#o-proof");
   const drop = $("[data-drop]", form);
   const done = $("[data-done]");
-
-  $("[data-product-choices]", form).innerHTML = keys.map((key) => {
-    const p = C.products[key];
-    const closed = isClosed(key);
-    return `<label class="choice">
-      <input type="radio" name="product" value="${esc(p.name)}" data-key="${key}" required${closed ? " disabled" : ""}>
-      <span class="choice__body">
-        <img class="choice__thumb" src="${esc(p.images.front)}" alt="">
-        <span class="choice__text">
-          <span class="choice__name">${esc(p.shortName)}</span>
-          <span class="choice__meta">${esc(choiceMeta(key))}</span>
-        </span>
-      </span>
-    </label>`;
-  }).join("");
+  const MAX_ITEMS = 6;
+  let itemSeq = 0;
 
   // payment block
   const pay = C.payment;
@@ -323,61 +301,142 @@
   }
   $("[data-qris-merchant]", form).textContent = pay.merchantName || "";
 
-  const currentKey = () => $('input[name="product"]:checked', form)?.dataset.key;
-
-  function selectProduct(key) {
-    const radio = $(`input[name="product"][data-key="${key}"]`, form);
-    if (radio && !radio.disabled) radio.checked = true;
-    updateOrderForm();
+  function itemHTML(id) {
+    const choices = keys.map((key) => {
+      const p = C.products[key];
+      return `<label class="choice">
+        <input type="radio" name="product-${id}" value="${esc(p.name)}" data-key="${key}" required${isClosed(key) ? " disabled" : ""}>
+        <span class="choice__body">
+          <img class="choice__thumb" src="${esc(p.images.front)}" alt="">
+          <span class="choice__text">
+            <span class="choice__name">${esc(p.shortName)}</span>
+            <span class="choice__meta">${esc(choiceMeta(key))}</span>
+          </span>
+        </span>
+      </label>`;
+    }).join("");
+    return `
+      <div class="item__head">
+        <span class="item__title">Tee <span data-item-n>1</span></span>
+        <span class="item__sub" data-item-sub></span>
+        <button type="button" class="item__remove" data-remove aria-label="Remove this tee">Remove ✕</button>
+      </div>
+      <fieldset class="field">
+        <legend>Type</legend>
+        <div class="choices">${choices}</div>
+      </fieldset>
+      <fieldset class="field" data-size-field>
+        <legend>Size</legend>
+        <div class="chips" data-size-choices></div>
+      </fieldset>
+      <fieldset class="field" data-sleeve-field hidden>
+        <legend>Sleeve</legend>
+        <div class="chips chips--wide" data-sleeve-choices></div>
+      </fieldset>
+      <div class="field">
+        <label for="qty-${id}">Quantity</label>
+        <div class="stepper">
+          <button type="button" data-step="-1" aria-label="Decrease quantity">−</button>
+          <input id="qty-${id}" data-qty type="number" min="1" max="10" value="1" inputmode="numeric" required>
+          <button type="button" data-step="1" aria-label="Increase quantity">+</button>
+        </div>
+      </div>`;
   }
 
-  let renderedSizesFor = null;
-  let renderedSleevesFor = null;
-  let lastTotal = "";
-  function updateOrderForm() {
-    const key = currentKey();
-    const shownSizes = (key ? C.products[key] : C.products[keys[0]]).sizes || [];
-    const sig = shownSizes.join("|");
-    if (sig !== renderedSizesFor) {
-      const prev = $('input[name="size"]:checked', form)?.value;
-      const shownKey = key || keys[0];
-      sizeChoices.innerHTML = shownSizes.map((s, i) => {
-        const extra = surchargeOf(shownKey, s);
-        return `<label class="chip"><input type="radio" name="size" value="${esc(s)}" required${s === prev ? " checked" : ""}><span style="--i:${i}">${esc(s)}${extra ? `<small>${plus(extra)}</small>` : ""}</span></label>`;
-      }).join("");
-      if (renderedSizesFor !== null && !reduced) {
-        sizeChoices.classList.remove("is-in");
-        void sizeChoices.offsetWidth;
-        sizeChoices.classList.add("is-in");
-      }
-      renderedSizesFor = sig;
-    }
-    const hasSizes = shownSizes.length > 0;
-    sizeField.hidden = !hasSizes;
-    sizeField.disabled = !hasSizes;
+  const itemList = () => $$(".item", itemsEl);
+  const itemKey = (el) => $("input[data-key]:checked", el)?.dataset.key;
 
-    // sleeve options (only products that define them)
-    const sleeves = key ? sleevesOf(key) : [];
-    const sleeveSig = key ? key + ":" + sleeves.map((o) => o.name).join("|") : "";
-    if (sleeveSig !== renderedSleevesFor) {
-      const prevSleeve = $('input[name="sleeve"]:checked', form)?.value;
-      sleeveChoices.innerHTML = sleeves.map((o, i) => {
-        const on = prevSleeve ? o.name === prevSleeve : i === 0;
-        return `<label class="chip"><input type="radio" name="sleeve" value="${esc(o.name)}" required${on ? " checked" : ""}><span style="--i:${i}">${esc(o.name)}${o.extra ? `<small>${plus(o.extra)}</small>` : ""}</span></label>`;
-      }).join("");
-      renderedSleevesFor = sleeveSig;
+  function clampQty(input) {
+    const n = parseInt(input.value, 10);
+    return Number.isNaN(n) ? Number(input.min) : clamp(n, Number(input.min), Number(input.max));
+  }
+
+  function itemData(el) {
+    const key = itemKey(el);
+    const size = $("input[data-size]:checked", el)?.value;
+    const sleeve = key ? sleeveOf(key, $("input[data-sleeve]:checked", el)?.value) : undefined;
+    const qty = clampQty($("[data-qty]", el));
+    const unit = key ? priceOf(key, size) + (sleeve ? sleeve.extra : 0) : 0;
+    return { el, key, size, sleeve, qty, unit, total: unit * qty };
+  }
+
+  function addItem(key) {
+    const id = ++itemSeq;
+    const el = document.createElement("div");
+    el.className = "item";
+    el.dataset.item = id;
+    el.innerHTML = itemHTML(id);
+    itemsEl.append(el);
+    if (key) {
+      const r = $(`input[data-key="${key}"]`, el);
+      if (r && !r.disabled) r.checked = true;
     }
+    renderItem(el);
+    refreshItems();
+    if (itemList().length > 1 && !reduced && el.animate) {
+      el.animate([{ opacity: 0, transform: "translateY(18px)" }, { opacity: 1, transform: "none" }],
+        { duration: 450, easing: "cubic-bezier(.2,.7,.2,1)" });
+    }
+    return el;
+  }
+
+  function renderItem(el) {
+    const id = el.dataset.item;
+    const key = itemKey(el);
+    const shownKey = key || keys[0];
+
+    // sizes (before a type is picked, show the first product's sizes as a hint)
+    const sizes = C.products[shownKey].sizes || [];
+    const sizeBox = $("[data-size-choices]", el);
+    const sig = shownKey + ":" + sizes.join("|");
+    if (sizeBox.dataset.sig !== sig) {
+      const prev = $("input[data-size]:checked", el)?.value;
+      sizeBox.innerHTML = sizes.map((s, i) => {
+        const extra = surchargeOf(shownKey, s);
+        return `<label class="chip"><input type="radio" name="size-${id}" data-size value="${esc(s)}" required${s === prev ? " checked" : ""}><span style="--i:${i}">${esc(s)}${extra ? `<small>${plus(extra)}</small>` : ""}</span></label>`;
+      }).join("");
+      if (sizeBox.dataset.sig && !reduced) {
+        sizeBox.classList.remove("is-in");
+        void sizeBox.offsetWidth;
+        sizeBox.classList.add("is-in");
+      }
+      sizeBox.dataset.sig = sig;
+    }
+    const sizeField = $("[data-size-field]", el);
+    sizeField.hidden = sizes.length === 0;
+    sizeField.disabled = sizes.length === 0;
+
+    // sleeves (only products that define them)
+    const sleeves = key ? sleevesOf(key) : [];
+    const sleeveBox = $("[data-sleeve-choices]", el);
+    const sleeveSig = key ? key + ":" + sleeves.map((o) => o.name).join("|") : "";
+    if (sleeveBox.dataset.sig !== sleeveSig) {
+      const prev = $("input[data-sleeve]:checked", el)?.value;
+      sleeveBox.innerHTML = sleeves.map((o, i) => {
+        const on = prev ? o.name === prev : i === 0;
+        return `<label class="chip"><input type="radio" name="sleeve-${id}" data-sleeve value="${esc(o.name)}" required${on ? " checked" : ""}><span style="--i:${i}">${esc(o.name)}${o.extra ? `<small>${plus(o.extra)}</small>` : ""}</span></label>`;
+      }).join("");
+      sleeveBox.dataset.sig = sleeveSig;
+    }
+    const sleeveField = $("[data-sleeve-field]", el);
     sleeveField.hidden = sleeves.length === 0;
     sleeveField.disabled = sleeves.length === 0;
 
-    // keep the step numbers in order when a step is hidden
-    $$(".field__n", form).filter((el) => !el.closest("[hidden]")).forEach((el, i) => (el.textContent = pad(i + 1)));
+    const d = itemData(el);
+    $("[data-item-sub]", el).textContent = d.key ? money(d.total) : "";
+  }
 
-    const n = clampQty();
-    const p = key && C.products[key];
-    const size = $('input[name="size"]:checked', form)?.value;
-    const sleeve = $('input[name="sleeve"]:checked', form)?.value;
-    const total = p ? money((priceOf(key, size) + sleeveExtra(key, sleeve)) * n) : "Pick a tee";
+  let lastTotal = "";
+  function refreshItems() {
+    const list = itemList();
+    list.forEach((el, i) => {
+      $("[data-item-n]", el).textContent = i + 1;
+      $("[data-remove]", el).hidden = list.length === 1;
+    });
+    addBtn.disabled = list.length >= MAX_ITEMS;
+
+    const data = list.map(itemData).filter((d) => d.key);
+    const total = data.length ? money(data.reduce((sum, d) => sum + d.total, 0)) : "Pick a tee";
     if (total !== lastTotal) {
       totalEl.textContent = total;
       if (lastTotal && !reduced) {
@@ -390,26 +449,77 @@
 
     const allClosed = keys.every(isClosed);
     $('[type="submit"]', form).disabled = allClosed;
+    addBtn.hidden = allClosed;
     if (allClosed) setStatus($("[data-status]", form), "Pre-orders are closed for this batch.", false);
   }
 
-  function clampQty() {
-    const n = parseInt(qty.value, 10);
-    return Number.isNaN(n) ? Number(qty.min) : clamp(n, Number(qty.min), Number(qty.max));
+  // From a product's "Pre-order" button: reuse a card with that tee or an empty card, else add one.
+  function selectProduct(key) {
+    const list = itemList();
+    let el = list.find((i) => itemKey(i) === key) || list.find((i) => !itemKey(i));
+    if (!el) {
+      if (list.length < MAX_ITEMS) return addItem(key);
+      el = list[list.length - 1];
+    }
+    const r = $(`input[data-key="${key}"]`, el);
+    if (r && !r.disabled) r.checked = true;
+    renderItem(el);
+    refreshItems();
+    return el;
   }
 
-  $$("[data-step]", form).forEach((b) =>
-    b.addEventListener("click", () => {
-      qty.value = clamp(clampQty() + Number(b.dataset.step), Number(qty.min), Number(qty.max));
-      updateOrderForm();
-    }));
-  qty.addEventListener("input", updateOrderForm);
-  qty.addEventListener("blur", () => { qty.value = clampQty(); updateOrderForm(); });
+  // closing a product (deadline passed) — called from setClosed()
+  function closeInForm(key) {
+    $$(`input[data-key="${key}"]`, form).forEach((r) => {
+      r.disabled = true;
+      r.checked = false;
+      $(".choice__meta", r.closest(".choice")).textContent = choiceMeta(key);
+    });
+    itemList().forEach(renderItem);
+    refreshItems();
+  }
+
+  form.addEventListener("click", (e) => {
+    const step = e.target.closest("[data-step]");
+    if (step) {
+      const input = $("[data-qty]", step.closest(".item"));
+      input.value = clamp(clampQty(input) + Number(step.dataset.step), Number(input.min), Number(input.max));
+      renderItem(step.closest(".item"));
+      refreshItems();
+      return;
+    }
+    const remove = e.target.closest("[data-remove]");
+    if (remove) {
+      const el = remove.closest(".item");
+      const finish = () => {
+        el.remove();
+        refreshItems();
+        $("input[data-key]:not(:disabled)", itemList()[0])?.focus({ preventScroll: true });
+      };
+      // remove on a timer rather than onfinish, which never fires in a background tab
+      if (!reduced && el.animate) {
+        el.animate([{ opacity: 1 }, { opacity: 0, transform: "translateX(-24px)" }], { duration: 260, easing: "ease-in", fill: "forwards" });
+        setTimeout(finish, 260);
+      } else finish();
+    }
+  });
+  addBtn.addEventListener("click", () => {
+    const el = addItem();
+    $("input[data-key]:not(:disabled)", el)?.focus({ preventScroll: true });
+    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest" });
+  });
   form.addEventListener("change", (e) => {
-    if (["product", "size", "sleeve"].includes(e.target.name)) updateOrderForm();
+    const item = e.target.closest(".item");
+    if (item) { renderItem(item); refreshItems(); }
     e.target.classList.remove("is-invalid");
   });
-  form.addEventListener("input", (e) => e.target.classList.remove("is-invalid"));
+  form.addEventListener("input", (e) => {
+    e.target.classList.remove("is-invalid");
+    if (e.target.matches("[data-qty]")) { renderItem(e.target.closest(".item")); refreshItems(); }
+  });
+  form.addEventListener("focusout", (e) => {
+    if (e.target.matches("[data-qty]")) { e.target.value = clampQty(e.target); renderItem(e.target.closest(".item")); refreshItems(); }
+  });
 
   // upload
   const maxBytes = (C.form.maxUploadMB || 8) * 1024 * 1024;
@@ -450,38 +560,50 @@
   ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, () => drop.classList.add("is-drag")));
   ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, () => drop.classList.remove("is-drag")));
 
-  updateOrderForm();
+  addItem();
+
+  // the sheet's Size column is short, so long sleeve goes in as e.g. "M (Long)"
+  const sizeLabel = (d) => {
+    const size = d.size || "One size";
+    return d.sleeve && d.sleeve.tag ? `${size} (${d.sleeve.tag})` : size;
+  };
+  const itemLine = (d) =>
+    `${C.products[d.key].name} · ${d.size || "One size"}${d.sleeve && d.sleeve.extra ? " · " + d.sleeve.name : ""} × ${d.qty}`;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const status = $("[data-status]", form);
     const btn = $('[type="submit"]', form);
-    const key = currentKey();
+    const items = itemList().map(itemData);
 
-    if (!key || isClosed(key)) return fail(status, "Pick a tee that's still open.", $('input[name="product"]:not(:disabled)', form));
+    const noType = items.find((d) => !d.key);
+    if (noType) return fail(status, "Pick a type for each tee (or remove the extra one).", $("input[data-key]:not(:disabled)", noType.el));
+    const closed = items.find((d) => isClosed(d.key));
+    if (closed) return fail(status, `${C.products[closed.key].name} is closed — remove it to continue.`, $("[data-remove]", closed.el));
+
     const fields = $$("input, textarea", form).filter((el) => !el.disabled && el.type !== "hidden");
     const invalid = fields.find((el) => !el.checkValidity());
     if (invalid) {
       fields.forEach((el) => el.classList.toggle("is-invalid", !el.checkValidity()));
       drop.classList.toggle("is-invalid", !proofInput.checkValidity());
-      const msg = invalid.name === "size" ? "Pick a size."
+      const msg = invalid.matches("[data-size]") ? "Pick a size for each tee."
         : invalid === proofInput ? "Upload your payment screenshot."
         : invalid.name === "whatsapp" ? "Check your WhatsApp number."
         : "Fill in the highlighted fields.";
       return fail(status, msg, invalid);
     }
 
-    const p = C.products[key];
-    const n = clampQty();
-    qty.value = n;
     const fd = new FormData(form);
-    const size = fd.get("size") || "One size";
-    const sleeve = sleeveOf(key, fd.get("sleeve"));
-    const unit = priceOf(key, size) + (sleeve ? sleeve.extra : 0);
-    // the sheet's Size column is short, so long sleeve goes in as e.g. "M (Long)"
-    const sizeLabel = sleeve && sleeve.tag ? `${size} (${sleeve.tag})` : size;
-    const total = unit * n;
     const ref = makeRef();
+    const orderTotal = items.reduce((sum, d) => sum + d.total, 0);
+    const lines = items.map((d) => ({
+      product: C.products[d.key].name,
+      size: sizeLabel(d),
+      sleeve: d.sleeve ? d.sleeve.name : "",
+      quantity: d.qty,
+      unit_price: money(d.unit),
+      total: money(d.total),
+    }));
 
     btn.disabled = true;
     btn.classList.add("is-loading");
@@ -492,18 +614,16 @@
         form_type: "order",
         _gotcha: fd.get("_gotcha") || "",
         order_ref: ref,
-        product: p.name,
-        size: sizeLabel,
-        sleeve: sleeve ? sleeve.name : "",
-        quantity: n,
-        unit_price: money(unit),
-        total: money(total),
+        items: lines,
+        order_total: money(orderTotal),
+        // single-tee orders also go in the old flat format, so an older script version still works
+        ...(lines.length === 1 ? lines[0] : {}),
         name: String(fd.get("name")).trim(),
         whatsapp: String(fd.get("whatsapp")).trim(),
         notes: String(fd.get("notes") || "").trim(),
         payment_proof: await fileToPayload(proofInput.files[0]),
       });
-      showDone({ ref, p, size: sleeve && sleeve.extra ? `${size} · ${sleeve.name}` : size, n, total });
+      showDone(ref, items, orderTotal);
       setStatus(status, "", false);
     } catch (err) {
       setStatus(status, err.message, true);
@@ -522,8 +642,9 @@
     }
   }
 
-  function showDone({ ref, p, size, n, total }) {
-    $("[data-done-summary]").textContent = `${ref} · ${p.name} · ${size} × ${n} · ${money(total)}`;
+  function showDone(ref, items, total) {
+    $("[data-done-summary]").innerHTML =
+      `${esc(ref)} · ${esc(money(total))}` + items.map((d) => `<br>${esc(itemLine(d))}`).join("");
     form.hidden = true;
     done.hidden = false;
     done.focus({ preventScroll: true });
@@ -538,12 +659,12 @@
   $("[data-reset]").addEventListener("click", () => {
     form.reset();
     showFile();
-    renderedSizesFor = null;
-    renderedSleevesFor = null;
-    updateOrderForm();
+    itemsEl.innerHTML = "";
+    lastTotal = "";
+    const first = addItem();
     done.hidden = true;
     form.hidden = false;
-    $('input[name="product"]:not(:disabled)', form)?.focus();
+    $("input[data-key]:not(:disabled)", first)?.focus();
   });
 
   /* ---------------------------------------------------------------

@@ -869,6 +869,64 @@ button { font: inherit; color: inherit; }
   color: var(--muted);
 }
 .order .field > label:not(.drop), .order .field > legend { color: var(--muted-dark); }
+.field__label {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted-dark);
+}
+
+/* basket: one card per tee */
+.items { display: grid; gap: 12px; }
+.item {
+  padding: clamp(16px, 2.4vw, 24px);
+  border: 1.5px solid var(--black);
+  background: rgba(255, 255, 255, .06);
+}
+.item .field { margin-bottom: 22px; }
+.item .field:last-child { margin-bottom: 0; }
+.item__head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; }
+.item__title { font-weight: 900; font-stretch: 120%; font-size: 20px; text-transform: uppercase; letter-spacing: -.01em; }
+.item__sub { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.item__remove {
+  margin-left: auto;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: .7;
+  transition: opacity .2s;
+}
+.item__remove:hover { opacity: 1; text-decoration: underline; }
+.add-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px 20px;
+  border: 1.5px dashed var(--black);
+  background: transparent;
+  font-family: var(--font);
+  font-weight: 800;
+  font-stretch: 115%;
+  font-size: 16px;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .2s, border-style .2s;
+}
+.add-item:hover { background: rgba(0, 0, 0, .08); border-style: solid; }
+.add-item span { font-size: 22px; line-height: 1; }
+.add-item small { font-family: var(--mono); font-weight: 400; font-size: 11px; letter-spacing: .06em; text-transform: none; opacity: .7; }
+.add-item[disabled] { opacity: .4; cursor: not-allowed; }
 .field__n { margin-right: 8px; opacity: .6; }
 .optional { opacity: .6; margin-left: 6px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }

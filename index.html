@@ -246,8 +246,8 @@
           <p class="eyebrow">03 — Order</p>
           <h2 class="order__title reveal" id="order-title"><span data-split>Lock in</span><br><span data-split>your tee.</span></h2>
           <ol class="steps">
-            <li>Pick your tee, size and quantity.</li>
-            <li>Scan the QRIS and pay the exact total.</li>
+            <li>Pick your tees — add as many as you like.</li>
+            <li>Scan the QRIS and pay the total once.</li>
             <li>Upload the payment screenshot and send.</li>
           </ol>
           <p class="order__fine">Your order counts toward the batch once we've confirmed the payment. If the batch doesn't reach <span data-quota>12</span>, you're refunded in full.</p>
@@ -260,37 +260,21 @@
               <label>Leave this empty <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
             </div>
 
-            <fieldset class="field">
-              <legend><span class="field__n">01</span> Tee</legend>
-              <div class="choices" data-product-choices></div>
-            </fieldset>
-
-            <fieldset class="field" data-size-field>
-              <legend><span class="field__n">02</span> Size</legend>
-              <div class="chips" data-size-choices></div>
-            </fieldset>
-
-            <fieldset class="field" data-sleeve-field hidden>
-              <legend><span class="field__n">03</span> Sleeve</legend>
-              <div class="chips chips--wide" data-sleeve-choices></div>
-            </fieldset>
-
             <div class="field">
-              <label for="qty"><span class="field__n">03</span> Quantity</label>
-              <div class="stepper">
-                <button type="button" data-step="-1" aria-label="Decrease quantity">−</button>
-                <input id="qty" name="quantity" type="number" min="1" max="10" value="1" inputmode="numeric" required>
-                <button type="button" data-step="1" aria-label="Increase quantity">+</button>
-              </div>
+              <p class="field__label"><span class="field__n">01</span> Your tees</p>
+              <div class="items" data-items></div>
+              <button type="button" class="add-item" data-add-item>
+                <span aria-hidden="true">+</span> Add another tee <small>Regular and Boxy in one order? Add both.</small>
+              </button>
             </div>
 
             <div class="field-row">
               <div class="field">
-                <label for="o-name"><span class="field__n">04</span> Name</label>
+                <label for="o-name"><span class="field__n">02</span> Name</label>
                 <input id="o-name" name="name" type="text" autocomplete="name" required maxlength="80">
               </div>
               <div class="field">
-                <label for="o-wa"><span class="field__n">05</span> WhatsApp number</label>
+                <label for="o-wa"><span class="field__n">03</span> WhatsApp number</label>
                 <input id="o-wa" name="whatsapp" type="tel" autocomplete="tel" required
                        pattern="[+]?[0-9][0-9\s\-]{7,17}" placeholder="08xx xxxx xxxx"
                        title="Your WhatsApp number, e.g. 0812 3456 7890">
@@ -299,7 +283,7 @@
 
             <div class="pay" data-pay>
               <div class="pay__total">
-                <span class="eyebrow"><span class="field__n">06</span>— Pay exactly</span>
+                <span class="eyebrow">04 — Pay exactly</span>
                 <strong data-total>—</strong>
                 <p class="pay__note" data-pay-note></p>
                 <a class="btn btn--ink btn--sm" data-qris-download download>Save QR image</a>
@@ -311,7 +295,7 @@
             </div>
 
             <div class="field">
-              <label for="o-proof"><span class="field__n">07</span> Payment screenshot</label>
+              <label for="o-proof"><span class="field__n">05</span> Payment screenshot</label>
               <label class="drop" data-drop>
                 <input id="o-proof" name="payment_proof" type="file" accept="image/*,application/pdf" required>
                 <span class="drop__empty">
@@ -327,7 +311,7 @@
             </div>
 
             <div class="field">
-              <label for="o-notes"><span class="field__n">08</span> Notes <span class="optional">optional</span></label>
+              <label for="o-notes"><span class="field__n">06</span> Notes <span class="optional">optional</span></label>
               <textarea id="o-notes" name="notes" rows="2" maxlength="600"></textarea>
             </div>
 
