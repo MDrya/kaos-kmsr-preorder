@@ -16,6 +16,14 @@ window.KMSR_CONFIG = {
   // Minimum orders for a batch to be produced.
   quota: 12,
 
+  // Extra charge per big size, added to each product's base price (Rupiah).
+  // A product can override this with its own sizeSurcharge.
+  sizeSurcharge: {
+    "2XL": 7500,
+    "3XL": 15000,
+    "4XL": 22500,
+  },
+
   timeZone: "Asia/Jakarta",
   timeZoneLabel: "WIB",
 
@@ -28,7 +36,7 @@ window.KMSR_CONFIG = {
       name: "Regular Tee",
       shortName: "Regular",
       fit: "Regular fit · S–4XL",
-      price: 129999,
+      price: 94999, // base price for S–XL
       deadline: null, // TODO e.g. "2026-10-12T23:59:00+07:00"
       description:
         "The everyday cut. Chest logo up front, the full KMSR star across the back. Made only if the batch fills.",
@@ -60,7 +68,7 @@ window.KMSR_CONFIG = {
       name: "Boxy Tee",
       shortName: "Boxy",
       fit: "Oversize boxy · S–XL",
-      price: 129999,
+      price: 99999, // base price for S–XL
       deadline: null, // TODO
       description:
         "Wide, cropped, dropped shoulders. Same print, heavier attitude. Made only if the batch fills.",

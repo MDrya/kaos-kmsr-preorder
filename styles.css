@@ -681,6 +681,13 @@ button { font: inherit; color: inherit; }
   letter-spacing: -.02em;
   line-height: 1;
 }
+.product__price-note {
+  margin: -6px 0 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
 .product__desc { margin: 0 0 28px; color: var(--ink-2); max-width: 40ch; }
 
 .specs { margin: 0 0 40px; }
@@ -767,6 +774,7 @@ button { font: inherit; color: inherit; }
 .sizes th, .sizes td { text-align: left; padding: 11px 12px 11px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .sizes thead th { font-weight: 400; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom-color: var(--line-2); }
 .sizes tbody th { font-family: var(--font); font-weight: 800; font-stretch: 125%; font-size: 18px; transition: color .2s, transform .3s var(--ease); }
+.sizes__price.is-up { color: var(--red-hot); }
 .sizes tbody tr { cursor: pointer; transition: background-color .2s; }
 .sizes tbody tr:hover, .sizes tbody tr.is-active { background: var(--bg-2); }
 .sizes tbody tr.is-active th { color: var(--red); transform: translateX(6px); }
@@ -939,6 +947,8 @@ button { font: inherit; color: inherit; }
   font-size: 18px;
   transition: background-color .2s, color .2s, transform .3s var(--ease);
 }
+.chip small { display: block; margin-top: 1px; font-family: var(--mono); font-size: 10px; font-weight: 400; letter-spacing: 0; opacity: .7; line-height: 1; }
+.chip span:has(small) { padding-block: 6px; line-height: 1.05; }
 .chip:hover span { transform: translateY(-2px); }
 .chip input:checked + span { background: var(--black); color: var(--ink); transform: scale(1.06); }
 .chips.is-in .chip span { animation: chip-in .5s var(--ease) both; animation-delay: calc(var(--i) * 40ms); }

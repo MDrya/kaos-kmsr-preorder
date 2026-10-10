@@ -20,6 +20,16 @@
     String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const money = (n) => (typeof n === "number" ? "Rp " + new Intl.NumberFormat("id-ID").format(n) : String(n));
 
+  // base price + surcharge for big sizes (config.sizeSurcharge, or the product's own)
+  const surchargeOf = (key, size) => ((C.products[key].sizeSurcharge || C.sizeSurcharge || {})[size] || 0);
+  const priceOf = (key, size) => C.products[key].price + surchargeOf(key, size);
+  const bigSizesOf = (key) => (C.products[key].sizes || []).filter((s) => surchargeOf(key, s) > 0);
+  const plus = (n) => "+" + new Intl.NumberFormat("id-ID").format(n);
+  const choiceMeta = (key) => {
+    const p = C.products[key];
+    return (bigSizesOf(key).length ? "from " : "") + money(p.price) + (isClosed(key) ? " · closed" : "");
+  };
+
   const goalOf = (key) => C.products[key].goal ?? C.quota;
   const countOf = (key) => Math.max(0, Number(C.counts[key]) || 0);
   const deadlineOf = (key) => (C.products[key].deadline ? new Date(C.products[key].deadline) : null);
@@ -38,11 +48,8 @@
      --------------------------------------------------------------- */
   $$("[data-quota]").forEach((el) => (el.textContent = C.quota));
   $$("[data-year]").forEach((el) => (el.textContent = new Date().getFullYear()));
-  const prices = keys.map((k) => C.products[k].price).filter((p) => typeof p === "number");
-  const minPrice = Math.min(...prices);
-  $$("[data-price-text]").forEach((el) => {
-    el.textContent = prices.every((p) => p === minPrice) ? money(minPrice) : "From " + money(minPrice);
-  });
+  const minPrice = Math.min(...keys.map((k) => C.products[k].price));
+  $$("[data-price-text]").forEach((el) => (el.textContent = "From " + money(minPrice)));
 
   /* ---------------------------------------------------------------
      Product sections
@@ -58,6 +65,11 @@
     f("name").textContent = p.name;
     f("fit").textContent = p.fit;
     f("price").textContent = money(p.price);
+    const big = bigSizesOf(key);
+    const base = (p.sizes || []).filter((s) => !big.includes(s));
+    const baseLabel = base.length > 1 ? `${base[0]}–${base[base.length - 1]}` : base[0] || "";
+    f("priceNote").textContent = [baseLabel, ...big.map((s) => `${s} ${plus(surchargeOf(key, s))}`)].filter(Boolean).join(" · ");
+    f("priceNote").hidden = !big.length;
     f("description").textContent = p.description;
 
     f("front").src = p.images.front;
@@ -108,9 +120,10 @@
     // size chart + fit visual
     const chart = p.sizeChart;
     if (chart && chart.rows && chart.rows.length) {
-      f("sizechartHead").innerHTML = chart.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("");
+      f("sizechartHead").innerHTML = chart.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("") + `<th scope="col">Price</th>`;
       f("sizechart").innerHTML = chart.rows
-        .map((r) => `<tr tabindex="0">${r.map((c, i) => (i === 0 ? `<th scope="row">${esc(c)}</th>` : `<td>${esc(c)}</td>`)).join("")}</tr>`)
+        .map((r) => `<tr tabindex="0">${r.map((c, i) => (i === 0 ? `<th scope="row">${esc(c)}</th>` : `<td>${esc(c)}</td>`)).join("")}`
+          + `<td class="sizes__price${surchargeOf(key, r[0]) ? " is-up" : ""}">${new Intl.NumberFormat("id-ID").format(priceOf(key, r[0]))}</td></tr>`)
         .join("");
       setupFitViz(sec, chart);
     } else {
@@ -167,7 +180,7 @@
     if (radio) {
       radio.disabled = true;
       radio.checked = false;
-      $(".choice__meta", radio.closest(".choice")).textContent = `${money(C.products[key].price)} · closed`;
+      $(".choice__meta", radio.closest(".choice")).textContent = choiceMeta(key);
     }
     renderHeroStatus();
     updateOrderForm();
@@ -239,7 +252,7 @@
         <img class="choice__thumb" src="${esc(p.images.front)}" alt="">
         <span class="choice__text">
           <span class="choice__name">${esc(p.shortName)}</span>
-          <span class="choice__meta">${money(p.price)}${closed ? " · closed" : ""}</span>
+          <span class="choice__meta">${esc(choiceMeta(key))}</span>
         </span>
       </span>
     </label>`;
@@ -276,8 +289,11 @@
     const sig = shownSizes.join("|");
     if (sig !== renderedSizesFor) {
       const prev = $('input[name="size"]:checked', form)?.value;
-      sizeChoices.innerHTML = shownSizes.map((s, i) => `
-        <label class="chip"><input type="radio" name="size" value="${esc(s)}" required${s === prev ? " checked" : ""}><span style="--i:${i}">${esc(s)}</span></label>`).join("");
+      const shownKey = key || keys[0];
+      sizeChoices.innerHTML = shownSizes.map((s, i) => {
+        const extra = surchargeOf(shownKey, s);
+        return `<label class="chip"><input type="radio" name="size" value="${esc(s)}" required${s === prev ? " checked" : ""}><span style="--i:${i}">${esc(s)}${extra ? `<small>${plus(extra)}</small>` : ""}</span></label>`;
+      }).join("");
       if (renderedSizesFor !== null && !reduced) {
         sizeChoices.classList.remove("is-in");
         void sizeChoices.offsetWidth;
@@ -291,7 +307,8 @@
 
     const n = clampQty();
     const p = key && C.products[key];
-    const total = p && typeof p.price === "number" ? money(p.price * n) : "Pick a tee";
+    const size = $('input[name="size"]:checked', form)?.value;
+    const total = p ? money(priceOf(key, size) * n) : "Pick a tee";
     if (total !== lastTotal) {
       totalEl.textContent = total;
       if (lastTotal && !reduced) {
@@ -320,7 +337,7 @@
   qty.addEventListener("input", updateOrderForm);
   qty.addEventListener("blur", () => { qty.value = clampQty(); updateOrderForm(); });
   form.addEventListener("change", (e) => {
-    if (e.target.name === "product") updateOrderForm();
+    if (e.target.name === "product" || e.target.name === "size") updateOrderForm();
     e.target.classList.remove("is-invalid");
   });
   form.addEventListener("input", (e) => e.target.classList.remove("is-invalid"));
@@ -390,7 +407,8 @@
     qty.value = n;
     const fd = new FormData(form);
     const size = fd.get("size") || "One size";
-    const total = typeof p.price === "number" ? p.price * n : p.price;
+    const unit = priceOf(key, size);
+    const total = unit * n;
     const ref = makeRef();
 
     btn.disabled = true;
@@ -405,7 +423,7 @@
         product: p.name,
         size,
         quantity: n,
-        unit_price: money(p.price),
+        unit_price: money(unit),
         total: money(total),
         name: String(fd.get("name")).trim(),
         whatsapp: String(fd.get("whatsapp")).trim(),
