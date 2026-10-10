@@ -111,8 +111,9 @@ window.KMSR_CONFIG = {
      --------------------------------------------------------------- */
   payment: {
     method: "QRIS",
-    qrisImage: "assets/qris-placeholder.svg", // TODO replace with your QRIS, e.g. "assets/qris.png"
-    merchantName: "", // optional, shown under the QR (e.g. the name QRIS displays)
+    qrisImage: "assets/qris-code.png",   // shown in the form (just the code)
+    qrisDownload: "assets/qris.jpg",     // "Save QR image" button (full QRIS poster)
+    merchantName: "Mdraisen, Pakaian",   // the payee name buyers will see in their app
     note: "Pay the exact total, then upload the screenshot below.",
   },
 

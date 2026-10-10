@@ -56,9 +56,10 @@ screenshot, and a Status column (starts as `Pending`).
 
 ## QRIS
 
-Save your QRIS image as `assets/qris.png` and set `payment.qrisImage` to that path in
-`config.js`. The form shows it with a "Save QR image" button so phone users can
-open it in their e-wallet app.
+`assets/qris.jpg` is the full QRIS poster (what "Save QR image" downloads, so phone users
+can open it from their gallery in an e-wallet). `assets/qris-code.png` is just the code,
+cropped from it, shown in the form. If your QRIS changes, replace both and check the new
+crop still scans.
 
 ## Deadlines
 
@@ -104,7 +105,6 @@ Then open http://localhost:5173.
 ## Still to fill in
 
 - [ ] Deadline date/time for each tee
-- [ ] QRIS image (`payment.qrisImage`)
 - [ ] Apps Script URL (`form.endpoint`) + one test order
 - [ ] Real photos, when ready
 - [ ] Contact handles (optional — the footer hides the "Questions" block while they're empty)

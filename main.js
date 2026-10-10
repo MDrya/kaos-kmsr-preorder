@@ -306,8 +306,9 @@
   const qrDl = $("[data-qris-download]", form);
   if (pay.qrisImage) {
     qrImg.src = pay.qrisImage;
-    qrDl.href = pay.qrisImage;
-    qrDl.setAttribute("download", "KMSR-QRIS" + (pay.qrisImage.match(/\.\w+$/) || [".png"])[0]);
+    const dl = pay.qrisDownload || pay.qrisImage;
+    qrDl.href = dl;
+    qrDl.setAttribute("download", "KMSR-QRIS" + (dl.match(/\.\w+$/) || [".png"])[0]);
   } else {
     qrImg.closest("figure").hidden = true;
     qrDl.hidden = true;
