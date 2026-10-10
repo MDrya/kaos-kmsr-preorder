@@ -108,7 +108,6 @@ Then open http://localhost:5173.
 
 ## Still to fill in
 
-- [ ] Deadline date/time for each tee
 - [ ] Apps Script URL (`form.endpoint`) + one test order
 - [ ] Real photos, when ready
 - [ ] Contact handles (optional — the footer hides the "Questions" block while they're empty)
