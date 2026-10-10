@@ -31,7 +31,10 @@
   };
 
   const goalOf = (key) => C.products[key].goal ?? C.quota;
-  const countOf = (key) => Math.max(0, Number(C.counts[key]) || 0);
+  const countOf = (key) => Math.max(0, Number(key in liveCounts ? liveCounts[key] : C.counts[key]) || 0);
+  // Shown in the bars; replaced by live numbers from the sheet when they arrive.
+  const liveCounts = {};
+
   const deadlineOf = (key) => (C.products[key].deadline ? new Date(C.products[key].deadline) : null);
   const isClosed = (key) => {
     const d = deadlineOf(key);
@@ -83,27 +86,14 @@
       .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`)
       .join("");
 
-    // progress
+    // progress (segments are built once so later count updates can animate)
     const goal = goalOf(key);
-    const ordered = countOf(key);
-    const left = goal - ordered;
-    const count = f("ordered");
-    count.textContent = pad(ordered);
-    count.dataset.countTo = ordered;
     f("goal").textContent = pad(goal);
     const bar = f("bar");
     bar.style.setProperty("--n", goal);
     bar.setAttribute("aria-valuemax", goal);
-    bar.setAttribute("aria-valuenow", Math.min(ordered, goal));
-    bar.setAttribute("aria-label", `${ordered} of ${goal} ordered`);
-    bar.innerHTML = Array.from({ length: goal }, (_, i) => {
-      const cls = i < ordered ? "is-filled" : i === ordered ? "is-next" : "";
-      return `<span style="--i:${i}"${cls ? ` class="${cls}"` : ""}></span>`;
-    }).join("");
-    f("remaining").textContent = left > 0
-      ? `${left} more to lock this batch in.`
-      : "Quota hit — this batch is happening.";
-    sec.classList.toggle("is-locked", left <= 0);
+    bar.innerHTML = Array.from({ length: goal }, (_, i) => `<span style="--i:${i}"></span>`).join("");
+    renderProgress(key);
 
     // deadline + countdown
     const d = deadlineOf(key);
@@ -140,6 +130,56 @@
       }, 700);
     });
   });
+
+  function renderProgress(key) {
+    const sec = $(`[data-product="${key}"]`);
+    if (!sec) return;
+    const f = (name) => $(`[data-field="${name}"]`, sec);
+    const goal = goalOf(key);
+    const ordered = countOf(key);
+    const left = goal - ordered;
+
+    const count = f("ordered");
+    const shown = parseInt(count.textContent, 10) || 0;
+    count.dataset.countTo = ordered;
+    // already on screen: roll the number from what's shown to the new value
+    if (sec.querySelector(".product__info.is-in") && shown !== ordered) countUp(count, shown);
+    else count.textContent = pad(ordered);
+
+    const bar = f("bar");
+    bar.setAttribute("aria-valuenow", Math.min(ordered, goal));
+    bar.setAttribute("aria-label", `${ordered} of ${goal} ordered`);
+    Array.from(bar.children).forEach((seg, i) => {
+      seg.classList.toggle("is-filled", i < ordered);
+      seg.classList.toggle("is-next", i === ordered);
+    });
+    f("remaining").textContent = left > 0
+      ? `${left} more to lock this batch in.`
+      : "Quota hit — this batch is happening.";
+    sec.classList.toggle("is-locked", left <= 0);
+  }
+
+  // Confirmed orders are counted by the Apps Script (doGet ?action=counts).
+  async function loadLiveCounts() {
+    const url = C.form.endpoint;
+    if (!url || !/^https:\/\//.test(url)) return;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(url + (url.includes("?") ? "&" : "?") + "action=counts", { signal: ctrl.signal });
+      clearTimeout(timer);
+      const data = await res.json();
+      if (!data.ok || !data.counts) return;
+      keys.forEach((key) => {
+        const n = data.counts[C.products[key].name];
+        liveCounts[key] = typeof n === "number" ? n : 0;
+        renderProgress(key);
+      });
+      renderHeroStatus();
+    } catch {
+      // network/script problem: keep the fallback numbers from config.js
+    }
+  }
 
   function setupFitViz(sec, chart) {
     const rows = $$("tbody tr", sec);
@@ -230,6 +270,7 @@
     }).join("");
   }
   renderHeroStatus();
+  loadLiveCounts();
 
   /* ---------------------------------------------------------------
      Order form
@@ -704,23 +745,25 @@
   }
 
   /* ---------- scroll reveal ---------- */
-  function countUp(el) {
+  function countUp(el, from = 0) {
     const to = Number(el.dataset.countTo) || 0;
-    if (to === 0) { el.textContent = pad(to); return; }
+    if (to === from) { el.textContent = pad(to); return; }
     const start = performance.now();
     const dur = 1200;
+    const run = (el._countRun = (el._countRun || 0) + 1); // a newer count-up cancels this one
     const step = (now) => {
+      if (run !== el._countRun) return;
       const t = clamp((now - start) / dur, 0, 1);
-      el.textContent = pad(Math.round((1 - Math.pow(1 - t, 3)) * to));
+      el.textContent = pad(Math.round(from + (1 - Math.pow(1 - t, 3)) * (to - from)));
       if (t < 1) requestAnimationFrame(step);
     };
-    el.textContent = "00";
+    el.textContent = pad(from);
     requestAnimationFrame(step);
   }
 
   const onReveal = (el) => {
     el.classList.add("is-in");
-    $$("[data-count-to]", el).forEach(countUp);
+    $$("[data-count-to]", el).forEach((c) => countUp(c));
     const tee = $("[data-tee]", el);
     if (tee && !reduced) {
       setTimeout(() => {

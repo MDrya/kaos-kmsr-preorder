@@ -6,11 +6,14 @@
 
 window.KMSR_CONFIG = {
   /* ---------------------------------------------------------------
-     ORDER COUNTERS — update these by hand as payments are confirmed.
+     ORDER COUNTERS
+     The site counts these automatically from the Google Sheet: every
+     row in "Orders" whose Status is "Confirmed" adds its Qty.
+     The numbers below are only a fallback if the sheet can't be reached.
      --------------------------------------------------------------- */
   counts: {
-    regular: 9,
-    boxy: 4,
+    regular: 0,
+    boxy: 0,
   },
 
   // Minimum orders for a batch to be produced.

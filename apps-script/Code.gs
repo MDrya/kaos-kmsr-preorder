@@ -81,9 +81,42 @@ function doPost(e) {
   }
 }
 
-// Lets you open the /exec URL in a browser to check it's live.
-function doGet() {
+// GET ?action=counts → confirmed shirts per product, for the progress bars on the site.
+// Plain GET (no action) just confirms the backend is live.
+function doGet(e) {
+  const action = e && e.parameter && e.parameter.action;
+  if (action === "counts") return json({ ok: true, counts: confirmedCounts() });
   return json({ ok: true, message: "KMSR order backend is running." });
+}
+
+// Sums Qty of rows whose Status is "Confirmed", grouped by Product.
+// Cached for a minute so a busy page doesn't re-read the sheet on every visit.
+function confirmedCounts() {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get("counts");
+  if (hit) return JSON.parse(hit);
+
+  const counts = {};
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ORDERS_SHEET);
+  if (sh && sh.getLastRow() > 1) {
+    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, ORDER_HEADERS.length).getValues();
+    const P = ORDER_HEADERS.indexOf("Product");
+    const Q = ORDER_HEADERS.indexOf("Qty");
+    const S = ORDER_HEADERS.indexOf("Status");
+    rows.forEach(function (r) {
+      if (String(r[S]).trim().toLowerCase() !== "confirmed") return;
+      const product = String(r[P]).trim();
+      counts[product] = (counts[product] || 0) + (Number(r[Q]) || 0);
+    });
+  }
+  cache.put("counts", JSON.stringify(counts), 60);
+  return counts;
+}
+
+// Runs when you edit the sheet by hand (e.g. set Status to Confirmed),
+// so the site shows the new number right away instead of after the cache expires.
+function onEdit() {
+  CacheService.getScriptCache().remove("counts");
 }
 
 function sheet(ss, name, headers) {
@@ -121,7 +154,12 @@ function json(obj) {
 // Run this once from the editor to grant permissions and create the sheets/folder.
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  sheet(ss, ORDERS_SHEET, ORDER_HEADERS);
+  const orders = sheet(ss, ORDERS_SHEET, ORDER_HEADERS);
+  // Status dropdown: only "Confirmed" rows count toward the quota on the site
+  const status = ORDER_HEADERS.indexOf("Status") + 1;
+  orders.getRange(2, status, orders.getMaxRows() - 1, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(["Pending", "Confirmed", "Cancelled"], true).build()
+  );
   sheet(ss, CUSTOM_SHEET, CUSTOM_HEADERS);
   folder();
 }

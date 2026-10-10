@@ -12,23 +12,16 @@ apps-script/Code.gs the order backend (paste into Google Apps Script)
 assets/             tee images, logo, QRIS, favicon
 ```
 
-## Updating the order counter
+## How the order counter works
 
-Open `config.js` and change the numbers at the top, then commit and push:
+The progress bars count automatically from the Google Sheet. Every row in **Orders**
+whose **Status** is `Confirmed` adds its Qty to that product's bar. `Pending` and
+`Cancelled` rows don't count, so new orders only show up after you've checked the payment.
 
-```js
-counts: {
-  regular: 9,
-  boxy: 4,
-},
-```
+To confirm an order: set its Status cell to `Confirmed` (run `setup` once to get a
+dropdown in that column). The site picks it up the next time someone loads the page.
 
-Only count orders whose payment you've confirmed (set their **Status** column in the
-sheet to `Confirmed`). This formula in any spare cell gives the Regular total:
-
-```
-=SUMIFS(Orders!E:E, Orders!C:C, "Regular Tee", Orders!L:L, "Confirmed")
-```
+The `counts` in `config.js` are only a fallback, shown if the sheet can't be reached.
 
 ## Connecting the order form (Google Sheet)
 
@@ -49,8 +42,9 @@ One-time setup, about 5 minutes:
 7. Place one test order on the live site with any screenshot and check that a row and
    the image appear. Delete the test row afterwards.
 
-If you edit `Code.gs` later, use **Deploy → Manage deployments → Edit → New version**
-so the same URL keeps working.
+If you edit `Code.gs` later, paste the new version, save, then use
+**Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**
+so the same URL keeps working. (A "New deployment" would give you a different URL.)
 
 While `form.endpoint` isn't set, submitting on `localhost` runs in demo mode (nothing is sent,
 the payload is logged to the browser console) so you can preview the success screen.
