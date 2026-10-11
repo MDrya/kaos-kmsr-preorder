@@ -186,12 +186,12 @@ function waFormula(row, all) {
   const firstName = String(row[COL["Name"]]).trim().split(/\s+/)[0];
 
   const msg =
-    "Halo " + firstName + "! 👋\n" +
-    "Pembayaran pre-order Kaos KMSR kamu sudah kami terima dan konfirmasi ✅\n\n" +
+    "Halo " + firstName + "!\n" +
+    "Pembayaran pre-order Kaos KMSR kamu sudah kami terima dan konfirmasi.\n\n" +
     "Kode order: " + ref + "\n" + items + "\n" +
     "Total: Rp " + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "\n\n" +
     "Kaos diproduksi setelah batch mencapai 12 pcs. Kalau sampai deadline batch belum tercapai, " +
-    "uang kamu dikembalikan penuh. Terima kasih! ★" + "\n\n" +
+    "uang kamu dikembalikan penuh. Terima kasih!" + "\n\n" +
     "Pssttt, pingin kaosnya diproduksi:D share link ke teman kamu, capai milestonesnya bersama :DD";
 
   // api.whatsapp.com keeps emoji intact; the wa.me short link can turn them into "?"
