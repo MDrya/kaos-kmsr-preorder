@@ -92,7 +92,9 @@ function doPost(e) {
       ];
     });
     const sh = sheet(ss, ORDERS_SHEET, ORDER_HEADERS);
-    sh.getRange(sh.getLastRow() + 1, 1, rows.length, ORDER_HEADERS.length).setValues(rows);
+    const firstRow = sh.getLastRow() + 1;
+    sh.getRange(firstRow, 1, rows.length, ORDER_HEADERS.length).setValues(rows);
+    formatOrderRows(sh, firstRow, rows.length);
     return json({ ok: true });
   } catch (err) {
     return json({ ok: false, error: "Server error. Please try again." });
@@ -207,6 +209,18 @@ function waNumber(value) {
   return d.length >= 10 ? d : "";
 }
 
+// New rows don't reliably inherit the column's formats or dropdown (a Qty of 1 once
+// showed as the date 31/12/1899), so set them explicitly.
+function formatOrderRows(sh, first, count) {
+  if (count < 1) return;
+  sh.getRange(first, COL["Submitted"] + 1, count, 1).setNumberFormat("dd/mm/yyyy HH:mm:ss");
+  sh.getRange(first, COL["Qty"] + 1, count, 1).setNumberFormat("0");
+  // Status dropdown: only "Confirmed" rows count toward the quota on the site
+  sh.getRange(first, COL["Status"] + 1, count, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(["Pending", "Confirmed", "Cancelled"], true).build()
+  );
+}
+
 function sheet(ss, name, headers) {
   let sh = ss.getSheetByName(name);
   if (!sh) sh = ss.insertSheet(name);
@@ -245,11 +259,9 @@ function json(obj) {
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const orders = sheet(ss, ORDERS_SHEET, ORDER_HEADERS);
-  // Status dropdown: only "Confirmed" rows count toward the quota on the site
+  // formats + Status dropdown for every row (also repairs rows that lost them)
+  formatOrderRows(orders, 2, orders.getMaxRows() - 1);
   const status = COL["Status"] + 1;
-  orders.getRange(2, status, orders.getMaxRows() - 1, 1).setDataValidation(
-    SpreadsheetApp.newDataValidation().requireValueInList(["Pending", "Confirmed", "Cancelled"], true).build()
-  );
   if (orders.getLastRow() > 1) onEdit({ range: orders.getRange(2, status, orders.getLastRow() - 1, 1) });
   else orders.getRange(1, COL["WhatsApp confirm"] + 1).setValue("WhatsApp confirm").setFontWeight("bold");
   sheet(ss, CUSTOM_SHEET, CUSTOM_HEADERS);
