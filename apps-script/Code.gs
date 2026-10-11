@@ -194,7 +194,8 @@ function waFormula(row, all) {
     "Total: Rp " + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "\n\n" +
     "Kaos diproduksi setelah batch mencapai 12 pcs. Kalau sampai deadline batch belum tercapai, " +
     "uang kamu dikembalikan penuh. Terima kasih! ★" + "\n\n" +
-    "Pssttt, pingin kaosnya diproduksi:D share link ke teman kamu, capai milestonesnya bersama :DD";
+    "Pssttt, pingin kaosnya diproduksi:D share link ke teman kamu, capai milestonesnya bersama :DD\n" +
+    "https://kaos-kmsr-preorder.vercel.app";
 
   // api.whatsapp.com keeps emoji intact; the wa.me short link can turn them into "?"
   const url = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + encodeURIComponent(msg);
