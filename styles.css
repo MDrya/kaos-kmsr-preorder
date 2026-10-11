@@ -1091,6 +1091,48 @@ button { font: inherit; color: inherit; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 .btn.is-loading { pointer-events: none; }
+
+/* upload progress */
+.sending { padding: clamp(18px, 3vw, 28px); background: var(--black); color: var(--ink); }
+.sending__top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 14px; }
+.sending__label { font-weight: 800; font-stretch: 115%; font-size: clamp(16px, 1.6vw, 20px); text-transform: uppercase; letter-spacing: .01em; }
+.sending__pct {
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 900;
+  font-stretch: 125%;
+  letter-spacing: -.04em;
+  line-height: .9;
+  font-variant-numeric: tabular-nums;
+  color: var(--red-hot);
+}
+.sending__bar { height: 18px; background: rgba(245, 237, 228, .12); overflow: hidden; }
+.sending__bar span {
+  display: block;
+  height: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: repeating-linear-gradient(-45deg, var(--red) 0 14px, var(--red-hot) 14px 28px);
+  background-size: 40px 100%;
+  animation: stripes .6s linear infinite;
+}
+@keyframes stripes { to { background-position: 40px 0; } }
+.sending.is-done .sending__bar span { background: var(--ink); animation: none; }
+.sending.is-done .sending__pct { color: var(--ink); }
+.sending__steps { list-style: none; margin: 16px 0 0; padding: 0; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; }
+.sending__steps li { display: flex; align-items: center; gap: 10px; padding: 5px 0; color: var(--muted); transition: color .3s; }
+.sending__steps li::before {
+  content: "";
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.sending__steps li.is-active { color: var(--ink); }
+.sending__steps li.is-active::before { background: var(--red-hot); border-color: var(--red-hot); animation: pulse 1.2s infinite; }
+.sending__steps li.is-done { color: var(--ink); }
+.sending__steps li.is-done::before { content: "✓"; width: auto; height: auto; border: 0; color: var(--red-hot); font-weight: 600; }
+.sending__hint { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
 .btn.is-loading .btn__arrow { animation: spin .8s linear infinite; }
 
 /* confirmation */

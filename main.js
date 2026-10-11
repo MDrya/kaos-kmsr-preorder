@@ -605,11 +605,14 @@
       total: money(d.total),
     }));
 
+    const progress = sendProgress();
     btn.disabled = true;
-    btn.classList.add("is-loading");
-    $("[data-submit-label]", btn).textContent = "Sending…";
-    setStatus(status, "Uploading your order — don't close this page.", false);
+    btn.hidden = true;
+    setStatus(status, "", false);
+    progress.start();
     try {
+      const proof = await fileToPayload(proofInput.files[0]);
+      progress.uploading(proof ? proof.data.length : 0);
       await send({
         form_type: "order",
         _gotcha: fd.get("_gotcha") || "",
@@ -621,18 +624,91 @@
         name: String(fd.get("name")).trim(),
         whatsapp: String(fd.get("whatsapp")).trim(),
         notes: String(fd.get("notes") || "").trim(),
-        payment_proof: await fileToPayload(proofInput.files[0]),
+        payment_proof: proof,
       });
+      await progress.finish();
       showDone(ref, items, orderTotal);
-      setStatus(status, "", false);
     } catch (err) {
+      progress.stop();
       setStatus(status, err.message, true);
     } finally {
       btn.disabled = false;
-      btn.classList.remove("is-loading");
-      $("[data-submit-label]", btn).textContent = "Place pre-order";
+      btn.hidden = false;
     }
   });
+
+  // Progress panel while an order is sent. Browsers can't report upload progress to
+  // Google cross-origin, so the bar moves on an estimate from the file size; it only
+  // reaches 100% once the script has replied that the order is saved.
+  function sendProgress() {
+    const box = $("[data-sending]", form);
+    const fill = $("[data-sending-bar]", box);
+    const pct = $("[data-sending-pct]", box);
+    const label = $("[data-sending-label]", box);
+    const steps = $$("[data-sending-step]", box);
+    const TICK = 50;
+    let shown = 0;
+    let target = 0;
+    let creep = null;
+    let timer = null;
+    let nextStage = null;
+
+    const stage = (i, text) => {
+      steps.forEach((li, j) => {
+        li.classList.toggle("is-done", j < i);
+        li.classList.toggle("is-active", j === i);
+      });
+      label.textContent = text;
+    };
+    // ease toward `cap` (never quite reaching it), getting ~95% of the way in `ms`
+    const creepTo = (cap, ms) => { creep = { cap, rate: 1 - Math.pow(0.05, TICK / Math.max(ms, 300)) }; };
+    const tickFn = () => {
+      if (creep) target += (creep.cap - target) * creep.rate;
+      shown += (target - shown) * 0.25;
+      if (Math.abs(target - shown) < 0.1) shown = target;
+      fill.style.transform = `scaleX(${(shown / 100).toFixed(4)})`;
+      pct.textContent = Math.floor(shown) + "%";
+    };
+    const clear = () => { clearInterval(timer); clearTimeout(nextStage); creep = null; };
+
+    return {
+      start() {
+        clear();
+        shown = target = 0;
+        box.classList.remove("is-done");
+        box.hidden = false;
+        stage(0, "Preparing your screenshot…");
+        creepTo(14, 700);
+        tickFn();
+        timer = setInterval(tickFn, TICK);
+        box.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest" });
+      },
+      uploading(bytes) {
+        target = Math.max(target, 15);
+        stage(1, "Uploading to Google Drive…");
+        const ms = 700 + bytes / 250; // assume ~250 KB/s on a phone connection
+        creepTo(62, ms);
+        nextStage = setTimeout(() => { stage(2, "Saving your order to the sheet…"); creepTo(95, 5000); }, ms);
+      },
+      async finish() {
+        clearTimeout(nextStage);
+        creep = null;
+        target = 100;
+        stage(steps.length, "Saved ✓");
+        box.classList.add("is-done");
+        await wait(reduced ? 100 : 450);
+        shown = 100;
+        tickFn();
+        await wait(reduced ? 100 : 450);
+        clear();
+        box.hidden = true;
+      },
+      stop() {
+        clear();
+        box.hidden = true;
+      },
+    };
+  }
 
   function fail(status, msg, focusEl) {
     setStatus(status, msg, true);

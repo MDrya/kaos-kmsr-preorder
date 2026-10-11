@@ -318,6 +318,19 @@
             <button class="btn btn--ink btn--block btn--lg" type="submit" data-magnetic>
               <span data-submit-label>Place pre-order</span> <span class="btn__arrow" aria-hidden="true">→</span>
             </button>
+            <div class="sending" data-sending hidden role="status" aria-live="polite">
+              <div class="sending__top">
+                <span class="sending__label" data-sending-label>Preparing…</span>
+                <span class="sending__pct" data-sending-pct aria-hidden="true">0%</span>
+              </div>
+              <div class="sending__bar" aria-hidden="true"><span data-sending-bar></span></div>
+              <ol class="sending__steps">
+                <li data-sending-step>Preparing your screenshot</li>
+                <li data-sending-step>Uploading to Google Drive</li>
+                <li data-sending-step>Saving your order to the sheet</li>
+              </ol>
+              <p class="sending__hint">Keep this page open until it says saved.</p>
+            </div>
             <p class="form__status" role="status" aria-live="polite" data-status></p>
           </form>
 
