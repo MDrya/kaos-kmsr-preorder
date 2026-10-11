@@ -165,25 +165,41 @@
   }
 
   // Confirmed orders are counted by the Apps Script (doGet ?action=counts).
+  // Order of sources: the last numbers this visitor saw (instant), then the Vercel relay
+  // /api/counts (fast, cached at the edge), then the Apps Script directly (can be very slow).
   async function loadLiveCounts() {
-    const url = C.form.endpoint;
-    if (!url || !/^https:\/\//.test(url)) return;
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 8000);
-      const res = await fetch(url + (url.includes("?") ? "&" : "?") + "action=counts", { signal: ctrl.signal });
-      clearTimeout(timer);
-      const data = await res.json();
-      if (!data.ok || !data.counts) return;
+    const apply = (counts) => {
       keys.forEach((key) => {
-        const n = data.counts[C.products[key].name];
+        const n = counts[C.products[key].name];
         liveCounts[key] = typeof n === "number" ? n : 0;
         renderProgress(key);
       });
       renderHeroStatus();
-    } catch {
-      // network/script problem: keep the fallback numbers from config.js
-    }
+    };
+    try {
+      const saved = JSON.parse(localStorage.getItem("kmsr-counts") || "null");
+      if (saved && typeof saved === "object") apply(saved);
+    } catch { /* storage blocked */ }
+
+    const get = async (src, ms) => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), ms);
+      try {
+        const res = await fetch(src, { signal: ctrl.signal });
+        const data = await res.json();
+        return data && data.ok && data.counts ? data.counts : null;
+      } catch {
+        return null;
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+    const url = C.form.endpoint;
+    const counts = (!isLocal && (await get("/api/counts", 15000)))
+      || (url && /^https:\/\//.test(url) ? await get(`${url}?action=counts`, 60000) : null);
+    if (!counts) return; // keep what's shown (last seen, or the config.js fallback)
+    apply(counts);
+    try { localStorage.setItem("kmsr-counts", JSON.stringify(counts)); } catch { /* storage blocked */ }
   }
 
   function setupFitViz(sec, chart) {
