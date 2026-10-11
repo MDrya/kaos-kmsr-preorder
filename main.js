@@ -594,7 +594,6 @@
     }
 
     const fd = new FormData(form);
-    const ref = makeRef();
     const orderTotal = items.reduce((sum, d) => sum + d.total, 0);
     const lines = items.map((d) => ({
       product: C.products[d.key].name,
@@ -604,6 +603,11 @@
       unit_price: money(d.unit),
       total: money(d.total),
     }));
+    // Retrying the same order keeps its order ref, so the script won't save it twice
+    // if the first attempt actually went through.
+    const signature = JSON.stringify([lines, fd.get("name"), fd.get("whatsapp")]);
+    if (!retry || retry.signature !== signature) retry = { signature, ref: makeRef() };
+    const ref = retry.ref;
 
     const progress = sendProgress();
     btn.disabled = true;
@@ -625,7 +629,8 @@
         whatsapp: String(fd.get("whatsapp")).trim(),
         notes: String(fd.get("notes") || "").trim(),
         payment_proof: proof,
-      });
+      }, { onVerify: () => progress.verifying() });
+      retry = null;
       await progress.finish();
       showDone(ref, items, orderTotal);
     } catch (err) {
@@ -636,6 +641,8 @@
       btn.hidden = false;
     }
   });
+
+  let retry = null;
 
   // Progress panel while an order is sent. Browsers can't report upload progress to
   // Google cross-origin, so the bar moves on an estimate from the file size; it only
@@ -689,6 +696,11 @@
         const ms = 700 + bytes / 250; // assume ~250 KB/s on a phone connection
         creepTo(62, ms);
         nextStage = setTimeout(() => { stage(2, "Saving your order to the sheet…"); creepTo(95, 5000); }, ms);
+      },
+      verifying() {
+        clearTimeout(nextStage);
+        stage(2, "Double-checking the sheet…");
+        creepTo(97, 9000);
       },
       async finish() {
         clearTimeout(nextStage);
@@ -781,7 +793,7 @@
   /* ---------------------------------------------------------------
      Submission (Google Apps Script web app)
      --------------------------------------------------------------- */
-  async function send(payload) {
+  async function send(payload, { onVerify } = {}) {
     const url = C.form.endpoint;
     if (!url || !/^https:\/\//.test(url)) {
       if (isLocal) {
@@ -791,18 +803,38 @@
       }
       throw new Error("Ordering isn't connected yet. Please check back soon.");
     }
-    let res;
+    let res = null;
+    let data = null;
     try {
       // a plain string body is sent as text/plain, which avoids a CORS preflight
       res = await fetch(url, { method: "POST", body: JSON.stringify(payload) });
-    } catch {
-      throw new Error("Couldn't reach the server. Check your connection and try again.");
+      data = await res.json();
+    } catch { /* no readable reply */ }
+    if (data && data.ok) return;
+    if (data && data.error) throw new Error(data.error); // the script answered with a real problem
+
+    // Apps Script saves first, then sends the browser to a second Google page for the reply.
+    // That page is sometimes slow or fails even though the order is already in the sheet,
+    // so ask the script directly before telling the buyer it failed.
+    if (payload.order_ref) {
+      if (onVerify) onVerify();
+      if (await orderSaved(url, payload.order_ref)) return;
     }
-    let data = null;
-    try { data = await res.json(); } catch { /* not JSON */ }
-    if (!res.ok || !data || !data.ok) {
-      throw new Error((data && data.error) || "Something went wrong. Please try again in a moment.");
+    throw new Error(res
+      ? "Something went wrong. Please try again in a moment."
+      : "Couldn't reach the server. Check your connection and try again.");
+  }
+
+  async function orderSaved(url, ref) {
+    for (const delay of [1500, 3000, 6000]) {
+      await wait(delay);
+      try {
+        const r = await fetch(`${url}?action=check&ref=${encodeURIComponent(ref)}`);
+        const d = await r.json();
+        if (d.ok && typeof d.found === "boolean") return d.found;
+      } catch { /* try again */ }
     }
+    return false;
   }
 
   async function fileToPayload(file) {

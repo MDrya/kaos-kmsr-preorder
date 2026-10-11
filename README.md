@@ -23,6 +23,13 @@ dropdown in that column). The site picks it up the next time someone loads the p
 
 The `counts` in `config.js` are only a fallback, shown if the sheet can't be reached.
 
+### WhatsApp confirmation
+
+When you set a row to `Confirmed`, the **WhatsApp confirm** column gets a **Kirim WA ➜**
+link. Click it and WhatsApp opens a chat with that buyer with the confirmation already
+written (order code, tees, total) — just press send. Set the row back to `Pending` and the
+link disappears. For an order with several tees, the message lists all of them.
+
 ## Connecting the order form (Google Sheet)
 
 One-time setup, about 5 minutes:
