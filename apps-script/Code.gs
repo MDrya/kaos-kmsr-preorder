@@ -194,7 +194,8 @@ function waFormula(row, all) {
     "uang kamu dikembalikan penuh. Terima kasih! ★" + "\n\n" +
     "Pssttt, pingin kaosnya diproduksi:D share link ke teman kamu, capai milestonesnya bersama :DD";
 
-  const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(msg);
+  // api.whatsapp.com keeps emoji intact; the wa.me short link can turn them into "?"
+  const url = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + encodeURIComponent(msg);
   return '=HYPERLINK("' + url.replace(/"/g, '""') + '", "Kirim WA ➜")';
 }
 
