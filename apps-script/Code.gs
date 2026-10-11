@@ -191,7 +191,7 @@ function waFormula(row, all) {
     "Kode order: " + ref + "\n" + items + "\n" +
     "Total: Rp " + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "\n\n" +
     "Kaos diproduksi setelah batch mencapai 12 pcs. Kalau sampai deadline batch belum tercapai, " +
-    "uang kamu dikembalikan penuh. Terima kasih!" + "\n\n" +
+    "uang kamu dikembalikan penuh. Terima kasih! ★" + "\n\n" +
     "Pssttt, pingin kaosnya diproduksi:D share link ke teman kamu, capai milestonesnya bersama :DD";
 
   // api.whatsapp.com keeps emoji intact; the wa.me short link can turn them into "?"
