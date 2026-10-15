@@ -251,8 +251,35 @@
     el.classList.add("tick");
   }
 
+  // Hero countdown: the next deadline that hasn't passed yet.
+  const heroTimer = $("[data-hero-timer]");
+  const heroUnits = Object.fromEntries($$("[data-hunit]", heroTimer).map((el) => [el.dataset.hunit, el]));
+  const heroDays = $("[data-seg-days]", heroTimer);
+  const heroClock = $("[data-timer-sr]", heroTimer);
+  function tickHero(now) {
+    const ends = keys.map(deadlineOf).filter(Boolean).map((d) => d.getTime());
+    if (!ends.length) { heroTimer.hidden = true; return; }
+    const open = ends.filter((t) => t > now);
+    const end = open.length ? Math.min(...open) : Math.max(...ends);
+    const ms = Math.max(0, end - now);
+    heroTimer.hidden = false;
+    heroTimer.classList.toggle("is-closed", ms === 0);
+    heroTimer.classList.toggle("is-urgent", ms > 0 && ms < 864e5);
+    $("[data-timer-label]", heroTimer).textContent = ms === 0 ? "Pre-order closed" : "Pre-order closes in";
+    $("[data-timer-date]", heroTimer).textContent = (ms === 0 ? "Closed " : "Until ") + fmtDeadline(new Date(end));
+    const d = Math.floor(ms / 864e5);
+    heroDays.hidden = d === 0;
+    setUnit(heroUnits.d, pad(d));
+    setUnit(heroUnits.h, pad(Math.floor(ms / 36e5) % 24));
+    setUnit(heroUnits.m, pad(Math.floor(ms / 6e4) % 60));
+    setUnit(heroUnits.s, pad(Math.floor(ms / 1e3) % 60));
+    heroClock.setAttribute("aria-label", ms === 0 ? "Pre-order closed"
+      : `${d ? d + " days " : ""}${Math.floor(ms / 36e5) % 24} hours ${Math.floor(ms / 6e4) % 60} minutes left`);
+  }
+
   function tick() {
     const now = Date.now();
+    tickHero(now);
     countdowns.forEach((c) => {
       const ms = Math.max(0, c.end - now);
       setUnit(c.units.d, pad(Math.floor(ms / 864e5)));

@@ -72,6 +72,17 @@
         <span class="hero__line" data-split>nothing<em>.</em></span>
       </h1>
 
+      <div class="hero__timer" data-hero-timer hidden>
+        <p class="hero__timer-label"><span class="live-dot"></span><span data-timer-label>Pre-order closes in</span></p>
+        <div class="hero__clock" role="timer" aria-live="off" data-timer-sr>
+          <div class="seg" data-seg-days><b data-hunit="d">00</b><small>days</small></div>
+          <div class="seg"><b data-hunit="h">00</b><small>hours</small></div>
+          <div class="seg"><b data-hunit="m">00</b><small>min</small></div>
+          <div class="seg"><b data-hunit="s">00</b><small>sec</small></div>
+        </div>
+        <p class="hero__timer-date" data-timer-date></p>
+      </div>
+
       <div class="hero__foot">
         <ul class="hero__status" data-hero-status aria-label="Batch progress"></ul>
         <div class="badge" aria-hidden="true">
