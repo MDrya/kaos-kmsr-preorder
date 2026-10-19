@@ -40,7 +40,7 @@ window.KMSR_CONFIG = {
       shortName: "Regular",
       fit: "Regular fit · XS–4XL · short or long sleeve",
       price: 94999, // base price for S–XL
-      deadline: "2026-10-19T17:14:00+07:00",
+      deadline: "2026-10-19T23:17:00+07:00",
       description:
         "The everyday cut. Chest logo up front, the full KMSR star across the back. Made only if the batch fills.",
       specs: [
@@ -79,7 +79,7 @@ window.KMSR_CONFIG = {
       shortName: "Boxy",
       fit: "Oversize boxy · XS–XL",
       price: 99999, // base price for S–XL
-      deadline: "2026-10-19T17:14:00+07:00",
+      deadline: "2026-10-19T23:17:00+07:00",
       description:
         "Wide, cropped, dropped shoulders. Same print, heavier attitude. Made only if the batch fills.",
       specs: [
