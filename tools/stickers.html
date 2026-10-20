@@ -1,0 +1,185 @@
+<!doctype html>
+<!--
+  KMSR holo ticket stickers — one per order code.
+  Paste codes, preview, then Print → Save as PDF (A4, scale 100%, margins none).
+  Print on holographic sticker paper without white ink: every area with no ink shows the holo,
+  so the star window, the knocked-out letters and the tear line shimmer. Magenta line = die cut.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KMSR holo stickers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300&display=block" rel="stylesheet">
+<style>
+  :root { --bg: #0d0707; --ink: #f5ede4; --muted: #a58f89; --red: #e3202a; --line: #321d1c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1a1010; color: var(--ink); font-family: "Archivo", system-ui, sans-serif; }
+
+  .controls { max-width: 980px; margin: 0 auto; padding: 28px 20px 8px; display: grid; grid-template-columns: 1fr 260px; gap: 20px; }
+  .controls h1 { grid-column: 1 / -1; margin: 0; font-weight: 500; font-stretch: 115%; font-size: 22px; letter-spacing: .02em; }
+  .controls p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 14px; }
+  textarea { width: 100%; min-height: 150px; padding: 12px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); font: 14px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
+  .side { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+  .side label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  button { padding: 12px 16px; border: 1px solid var(--ink); background: transparent; color: var(--ink); font: 500 14px "Archivo", sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+  button.primary { background: var(--red); border-color: var(--red); }
+  .count { color: var(--muted); font-size: 13px; }
+
+  .sheets { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0 60px; }
+  .sheet {
+    width: 210mm; height: 297mm; padding: 5.5mm 6mm;
+    background: #fff; position: relative;
+    display: grid; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 90mm;
+    column-gap: 6mm; row-gap: 8mm; align-content: start; justify-content: center;
+  }
+  .sheet__foot { position: absolute; left: 6mm; bottom: 2.5mm; font: 7pt ui-monospace, Consolas, monospace; color: #999; }
+  .sticker { width: 45mm; height: 90mm; display: block; overflow: visible; }
+
+  .holo-on .sticker .holo { display: inline; }
+  .sticker .holo { display: none; }
+  .sticker .cut { display: none; }
+  .cuts-on .sticker .cut { display: inline; }
+
+  @media print {
+    @page { size: A4; margin: 0; }
+    body { background: #fff; }
+    .controls { display: none; }
+    .sheets { padding: 0; gap: 0; display: block; }
+    .sheet { box-shadow: none; page-break-after: always; break-after: page; margin: 0; }
+    .sticker .holo { display: none !important; }
+  }
+</style>
+</head>
+<body class="holo-on cuts-on">
+  <section class="controls">
+    <h1>KMSR holo ticket stickers</h1>
+    <p>One sticker per order code. Paste codes below (one per line — copy them from the Sheet). Duplicates and blank lines are ignored.</p>
+    <textarea id="codes" spellcheck="false" placeholder="KM-0J4J0W&#10;KM-YNTN15"></textarea>
+    <div class="side">
+      <label><input type="checkbox" id="holo" checked> Holo preview (screen only)</label>
+      <label><input type="checkbox" id="cuts" checked> Cut line (magenta)</label>
+      <span class="count" id="count"></span>
+      <button class="primary" id="print">Print / save PDF</button>
+      <span class="count">PDF: A4 · scale 100% · margins none</span>
+    </div>
+  </section>
+  <main class="sheets" id="sheets"></main>
+
+<script>
+(() => {
+  const W = 450, H = 900;          // sticker in 0.1 mm units (45 × 90 mm)
+  const NOTCH_Y = 640, NR = 28, R = 30;
+  const PER_SHEET = 12;
+  const STAR = "50,0 61.8,35.3 99,35.3 69,57.1 80.4,92.6 50,70.6 19.6,92.6 31,57.1 1,35.3 38.2,35.3";
+
+  // ticket outline: rounded corners, a half-circle notch on each side at the tear line
+  const SHAPE = [
+    `M${R},0 H${W - R} A${R},${R} 0 0 1 ${W},${R}`,
+    `V${NOTCH_Y - NR} A${NR},${NR} 0 0 0 ${W},${NOTCH_Y + NR}`,
+    `V${H - R} A${R},${R} 0 0 1 ${W - R},${H} H${R} A${R},${R} 0 0 1 0,${H - R}`,
+    `V${NOTCH_Y + NR} A${NR},${NR} 0 0 0 0,${NOTCH_Y - NR}`,
+    `V${R} A${R},${R} 0 0 1 ${R},0 Z`,
+  ].join(" ");
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+  // Everything inside <mask> drawn black is "no ink" → shows the holo paper.
+  function sticker(code, i) {
+    const id = "s" + i;
+    const star = `<polygon points="${STAR}" transform="translate(${W / 2} 300) scale(3.05) translate(-50 -47.5)"/>`;
+    const knockouts = `
+      <text x="${W / 2}" y="96" text-anchor="middle" font-family="Archivo" font-weight="400" font-size="24"
+            letter-spacing="9" style="font-stretch:125%">KMSR — ITB</text>
+      ${star}
+      <text x="${W / 2}" y="572" text-anchor="middle" font-family="Instrument Serif" font-style="italic" font-size="50"
+            letter-spacing="1">twelve or nothing</text>
+      <line x1="44" y1="${NOTCH_Y}" x2="${W - 44}" y2="${NOTCH_Y}" stroke="#000" stroke-width="3.5" stroke-dasharray="12 10"/>
+      <text x="${W / 2}" y="728" text-anchor="middle" font-family="Archivo" font-weight="400" font-size="22"
+            letter-spacing="1" style="font-stretch:125%">Nº</text>
+      <text x="${W / 2}" y="802" text-anchor="middle" font-family="JetBrains Mono" font-weight="300" font-size="46"
+            letter-spacing="2">${esc(code)}</text>
+      <text x="${W / 2}" y="858" text-anchor="middle" font-family="Archivo" font-weight="300" font-size="17"
+            letter-spacing="7" style="font-stretch:125%">BATCH 01 · BIRU DAUN</text>`;
+
+    return `<svg class="sticker" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sticker ${esc(code)}">
+      <defs>
+        <clipPath id="${id}-clip"><path d="${SHAPE}"/></clipPath>
+        <mask id="${id}-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
+          <path d="${SHAPE}" fill="#fff"/>
+          <g fill="#000">${knockouts}</g>
+        </mask>
+        <linearGradient id="${id}-holo" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox" class="holo-grad">
+          <stop offset="0" stop-color="#ffc6ec"/><stop offset=".18" stop-color="#c9e9ff"/>
+          <stop offset=".36" stop-color="#d4ffe0"/><stop offset=".54" stop-color="#fff3c4"/>
+          <stop offset=".72" stop-color="#e1ccff"/><stop offset=".9" stop-color="#bff6ff"/>
+          <stop offset="1" stop-color="#ffd0f0"/>
+        </linearGradient>
+        <linearGradient id="${id}-sheen" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/>
+          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g class="holo" clip-path="url(#${id}-clip)">
+        <rect width="${W}" height="${H}" fill="url(#${id}-holo)"/>
+        <rect class="sheen" x="-300" y="-200" width="260" height="${H + 400}" fill="url(#${id}-sheen)" transform="rotate(18)"/>
+      </g>
+      <rect width="${W}" height="${H}" fill="#0d0707" mask="url(#${id}-mask)"/>
+      <!-- the only colour ink: a red "Nº" and a hairline under it, printed onto holo for a metallic red -->
+      <text x="${W / 2}" y="728" text-anchor="middle" font-family="Archivo" font-weight="400" font-size="22"
+            letter-spacing="1" fill="#e3202a" style="font-stretch:125%">Nº</text>
+      <path class="cut" d="${SHAPE}" fill="none" stroke="#ff00ff" stroke-width="2.5"/>
+    </svg>`;
+  }
+
+  const ta = document.getElementById("codes");
+  const sheetsEl = document.getElementById("sheets");
+  const countEl = document.getElementById("count");
+
+  function codes() {
+    const seen = new Set();
+    return ta.value.split(/[\r\n,;\t]+/).map((s) => s.trim().toUpperCase())
+      .filter((s) => s && s !== "ORDER REF" && !seen.has(s) && seen.add(s));
+  }
+
+  function render() {
+    const list = codes();
+    try { localStorage.setItem("kmsr-sticker-codes", ta.value); } catch (e) {}
+    const pages = [];
+    for (let p = 0; p < Math.max(1, Math.ceil(list.length / PER_SHEET)); p++) {
+      const chunk = list.slice(p * PER_SHEET, (p + 1) * PER_SHEET);
+      pages.push(`<div class="sheet">${chunk.map((c, i) => sticker(c, p * PER_SHEET + i)).join("")}
+        <span class="sheet__foot">KMSR holo stickers · sheet ${p + 1}/${Math.max(1, Math.ceil(list.length / PER_SHEET))} · ${chunk.length} pcs · 45×90 mm · magenta = cut, do not print</span></div>`);
+    }
+    sheetsEl.innerHTML = pages.join("");
+    countEl.textContent = `${list.length} sticker${list.length === 1 ? "" : "s"} · ${Math.ceil(list.length / PER_SHEET) || 0} A4 sheet(s)`;
+  }
+
+  try { ta.value = localStorage.getItem("kmsr-sticker-codes") || ""; } catch (e) {}
+  const q = new URLSearchParams(location.search).get("codes");
+  if (q) ta.value = q.split(",").join("\n");
+  if (!ta.value) ta.value = "KM-0J4J0W\nKM-YNTN15\nKM-2MYTHX";
+
+  ta.addEventListener("input", render);
+  document.getElementById("holo").addEventListener("change", (e) => document.body.classList.toggle("holo-on", e.target.checked));
+  document.getElementById("cuts").addEventListener("change", (e) => document.body.classList.toggle("cuts-on", e.target.checked));
+  document.getElementById("print").addEventListener("click", () => window.print());
+  if (new URLSearchParams(location.search).has("nocut")) {
+    document.body.classList.remove("cuts-on"); document.getElementById("cuts").checked = false;
+  }
+
+  // holo sheen follows the pointer (screen only)
+  document.addEventListener("pointermove", (e) => {
+    const x = (e.clientX / innerWidth - 0.5) * 2;
+    document.querySelectorAll(".sticker .sheen").forEach((r) => r.setAttribute("x", String(-300 + (x + 1) * 380)));
+    document.querySelectorAll(".holo-grad").forEach((g) => g.setAttribute("gradientTransform", `rotate(${x * 25} .5 .5)`));
+  });
+
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(render);
+  render();
+})();
+</script>
+</body>
+</html>

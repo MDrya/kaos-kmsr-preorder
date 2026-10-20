@@ -118,3 +118,20 @@ Then open http://localhost:5173.
 - [ ] Apps Script URL (`form.endpoint`) + one test order
 - [ ] Real photos, when ready
 - [ ] Contact handles (optional — the footer hides the "Questions" block while they're empty)
+
+## Holo stickers (one per order code)
+
+Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`, or on the live site
+`/tools/stickers.html`). It makes one 45 × 90 mm "ticket" sticker per order code, 12 per A4 sheet.
+
+1. **Get the codes**: in the Sheet, a spare cell:
+   `=UNIQUE(FILTER(Orders!B2:B, Orders!L2:L="Confirmed"))` (use `;` instead of `,` if your Sheet is Indonesian).
+   Copy that column and paste it into the tool's box.
+2. **Export**: click *Print / save PDF* → Save as PDF, **A4, scale 100%, margins none**.
+   Make one PDF with the cut line on (for the die cut) and, if the shop asks, one with it off.
+3. **Brief for the print shop**:
+   > Cetak di **stiker hologram silver**, **tanpa tinta putih** — area yang tidak dicetak memang untuk efek hologram
+   > (bintang, tulisan, dan garis sobek). Ukuran 4,5 × 9 cm, **kiss-cut mengikuti garis magenta** (garis magenta
+   > jangan ikut dicetak). Tinta: hitam + merah sedikit (tulisan "Nº").
+
+The pasted codes stay in your browser only; nothing is saved to the site.
