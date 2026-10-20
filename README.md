@@ -122,8 +122,9 @@ Then open http://localhost:5173.
 ## Holo stickers (one per order code)
 
 Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`, or on the live site
-`/tools/stickers.html`). It makes one star-shaped sticker (64 mm wide) per order code, 12 per A4 sheet:
-black star with a holo rim, a holo ribbon across the arms carrying the order code in red, "KMSR" and "BIRU DAUN".
+`/tools/stickers.html`). It makes one 45 × 90 mm ticket sticker per order code, 12 per A4 sheet:
+a black top with a big red star, KMSR and ITB knocked out (holo), and a bare-holo stub below the tear line with
+the order code, a Code 128 barcode of the code, and BIRU DAUN. Scan-test the barcode on the proof with a phone app.
 
 1. **Get the codes**: in the Sheet, a spare cell:
    `=UNIQUE(FILTER(Orders!B2:B, Orders!L2:L="Confirmed"))` (use `;` instead of `,` if your Sheet is Indonesian).
@@ -132,7 +133,7 @@ black star with a holo rim, a holo ribbon across the arms carrying the order cod
    Make one PDF with the cut line on (for the die cut) and, if the shop asks, one with it off.
 3. **Brief for the print shop**:
    > Cetak di **stiker hologram silver**, **tanpa tinta putih** — area yang tidak dicetak memang untuk efek hologram
-   > (pinggiran bintang, pita di tengah, dan tulisan). Bentuk bintang lebar 6,4 cm, **kiss-cut mengikuti garis
-   > magenta** (garis magenta jangan ikut dicetak). Tinta: hitam + merah (kode order di pita).
+   > (tulisan KMSR/ITB dan bagian bawah tiket). Ukuran 4,5 × 9 cm, **kiss-cut mengikuti garis magenta**
+   > (garis magenta jangan ikut dicetak). Tinta: hitam + merah (bintang).
 
 The pasted codes stay in your browser only; nothing is saved to the site.

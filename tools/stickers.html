@@ -1,9 +1,11 @@
 <!doctype html>
 <!--
-  KMSR holo star stickers — one per order code.
+  KMSR holo ticket stickers — one per order code.
   Paste codes, preview, then Print → Save as PDF (A4, scale 100%, margins none).
-  Print on holographic sticker paper without white ink: every area with no ink shows the holo
-  (the rim, the ribbon across the arms, and the knocked-out lettering). Magenta line = die cut.
+  Print on holographic sticker paper without white ink: every area with no ink shows the holo.
+  Top half: black ink with KMSR and the side line knocked out, a red-ink star (metallic on holo).
+  Stub: bare holo with the code, a scannable Code 128 barcode and BIRU DAUN in black ink.
+  Magenta line = die cut, do not print.
 -->
 <html lang="en">
 <head>
@@ -12,31 +14,32 @@
 <title>KMSR holo stickers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..600&family=Bodoni+Moda:opsz,wght@6..96,700..900&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=JetBrains+Mono:wght@500;800&display=block" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
 <style>
   :root { --bg: #0d0707; --ink: #f5ede4; --muted: #a58f89; --red: #e3202a; --line: #321d1c; }
   * { box-sizing: border-box; }
   body { margin: 0; background: #1a1010; color: var(--ink); font-family: "Archivo", system-ui, sans-serif; }
 
   .controls { max-width: 980px; margin: 0 auto; padding: 28px 20px 8px; display: grid; grid-template-columns: 1fr 260px; gap: 20px; }
-  .controls h1 { grid-column: 1 / -1; margin: 0; font-weight: 600; font-stretch: 115%; font-size: 22px; letter-spacing: .02em; }
+  .controls h1 { grid-column: 1 / -1; margin: 0; font-weight: 800; font-stretch: 115%; font-size: 22px; letter-spacing: .02em; }
   .controls p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 14px; }
   textarea { width: 100%; min-height: 150px; padding: 12px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); font: 14px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
   .side { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
   .side label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  button { padding: 12px 16px; border: 1px solid var(--ink); background: transparent; color: var(--ink); font: 600 14px "Archivo", sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+  button { padding: 12px 16px; border: 1px solid var(--ink); background: transparent; color: var(--ink); font: 700 14px "Archivo", sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
   button.primary { background: var(--red); border-color: var(--red); }
   .count { color: var(--muted); font-size: 13px; }
 
   .sheets { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0 60px; }
   .sheet {
-    width: 210mm; height: 297mm; padding: 8mm 4mm;
+    width: 210mm; height: 297mm; padding: 5.5mm 6mm;
     background: #fff; position: relative;
-    display: grid; grid-template-columns: repeat(3, 64mm); grid-auto-rows: 60.8mm;
-    column-gap: 5mm; row-gap: 9mm; align-content: start; justify-content: center;
+    display: grid; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 90mm;
+    column-gap: 6mm; row-gap: 8mm; align-content: start; justify-content: center;
   }
-  .sheet__foot { position: absolute; left: 8mm; bottom: 3mm; font: 7pt ui-monospace, Consolas, monospace; color: #999; }
-  .sticker { width: 64mm; height: 60.8mm; display: block; overflow: visible; }
+  .sheet__foot { position: absolute; left: 6mm; bottom: 2.5mm; font: 7pt ui-monospace, Consolas, monospace; color: #999; }
+  .sticker { width: 45mm; height: 90mm; display: block; overflow: visible; }
 
   .sticker .holo { display: none; }
   .holo-on .sticker .holo { display: inline; }
@@ -55,7 +58,7 @@
 </head>
 <body class="holo-on cuts-on">
   <section class="controls">
-    <h1>KMSR holo star stickers</h1>
+    <h1>KMSR holo ticket stickers</h1>
     <p>One sticker per order code. Paste codes below (one per line — copy them from the Sheet). Duplicates and blank lines are ignored.</p>
     <textarea id="codes" spellcheck="false" placeholder="KM-0J4J0W&#10;KM-YNTN15"></textarea>
     <div class="side">
@@ -70,48 +73,60 @@
 
 <script>
 (() => {
-  // Star in 1/10 units of the site's star symbol (100 × 95) → 1000 × 950, printed 64 × 60.8 mm.
-  const W = 1000, H = 950;
-  const PTS = [[500,0],[618,353],[990,353],[690,571],[804,926],[500,706],[196,926],[310,571],[10,353],[382,353]];
+  const W = 450, H = 900;          // sticker in 0.1 mm units (45 × 90 mm)
+  const TEAR = 628, NR = 26, R = 28;
   const PER_SHEET = 12;
-  const BAND = { top: 340, bottom: 486 };     // ribbon across the arms
-  const CODE_MAX = 560;                        // widest the code may run (fits the ribbon's narrow end)
+  const STAR = "50,0 61.8,35.3 99,35.3 69,57.1 80.4,92.6 50,70.6 19.6,92.6 31,57.1 1,35.3 38.2,35.3";
 
-  // star outline with softly rounded corners (kinder to the die cutter, nicer to hold)
-  function roundedPath(pts, r) {
-    const n = pts.length;
-    let d = "";
-    for (let i = 0; i < n; i++) {
-      const [px, py] = pts[(i - 1 + n) % n], [cx, cy] = pts[i], [nx, ny] = pts[(i + 1) % n];
-      const v1 = [px - cx, py - cy], v2 = [nx - cx, ny - cy];
-      const l1 = Math.hypot(...v1), l2 = Math.hypot(...v2);
-      const k = Math.min(r, l1 / 2, l2 / 2);
-      const a = [cx + (v1[0] / l1) * k, cy + (v1[1] / l1) * k];
-      const b = [cx + (v2[0] / l2) * k, cy + (v2[1] / l2) * k];
-      d += `${i ? "L" : "M"}${a[0].toFixed(1)},${a[1].toFixed(1)} Q${cx},${cy} ${b[0].toFixed(1)},${b[1].toFixed(1)} `;
-    }
-    return d + "Z";
-  }
-  const SHAPE = roundedPath(PTS, 26);
+  // ticket outline: rounded corners, a half-circle bite on each side at the tear line
+  const SHAPE = [
+    `M${R},0 H${W - R} A${R},${R} 0 0 1 ${W},${R}`,
+    `V${TEAR - NR} A${NR},${NR} 0 0 0 ${W},${TEAR + NR}`,
+    `V${H - R} A${R},${R} 0 0 1 ${W - R},${H} H${R} A${R},${R} 0 0 1 0,${H - R}`,
+    `V${TEAR + NR} A${NR},${NR} 0 0 0 0,${TEAR - NR}`,
+    `V${R} A${R},${R} 0 0 1 ${R},0 Z`,
+  ].join(" ");
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-  // Inside <mask>, black = no ink = holo shows.
+  // Code 128 bars for the code, as black rects fitted into the given box (JsBarcode builds them)
+  function barcode(code, x, y, w, h) {
+    if (!window.JsBarcode) return "";
+    const tmp = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    try {
+      JsBarcode(tmp, code, { format: "CODE128", displayValue: false, margin: 0, height: 100, width: 2 });
+    } catch (e) { return ""; }
+    const total = parseFloat(tmp.getAttribute("width")) || 1;
+    const k = w / total;
+    // the bars sit inside JsBarcode's <g> (the loose rect outside it is the white background)
+    return Array.from(tmp.querySelectorAll("g rect"))
+      .map((r) => `<rect x="${(x + parseFloat(r.getAttribute("x")) * k).toFixed(2)}" y="${y}" width="${(parseFloat(r.getAttribute("width")) * k).toFixed(2)}" height="${h}"/>`)
+      .join("");
+  }
+
   function sticker(code, i) {
     const id = "s" + i;
+    const star = `<polygon points="${STAR}" transform="translate(292 262) scale(4.3) translate(-50 -47.5)"/>`;
+    // knocked out of BOTH the black and the red star → the letters are always holo
+    const letters = `
+      <text transform="translate(146 318) rotate(-90)" text-anchor="middle" font-family="Archivo" font-weight="900"
+            font-size="178" letter-spacing="-4">KMSR</text>
+      <text transform="translate(432 314) rotate(90)" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
+            font-size="19" letter-spacing="5">ADMIT ONE ✦ KAOS KMSR ✦ ITB</text>
+      <text x="404" y="598" text-anchor="end" font-family="Archivo" font-weight="900" font-size="104"
+            letter-spacing="-2" style="font-stretch:125%">ITB</text>`;
+
     return `<svg class="sticker" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sticker ${esc(code)}">
       <defs>
         <clipPath id="${id}-clip"><path d="${SHAPE}"/></clipPath>
-        <mask id="${id}-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
-          <path d="${SHAPE}" fill="#fff"/>
-          <g fill="#000" stroke="none">
-            <path d="${SHAPE}" fill="none" stroke="#000" stroke-width="30"/>
-            <rect x="0" y="${BAND.top}" width="${W}" height="${BAND.bottom - BAND.top}" clip-path="url(#${id}-clip)"/>
-            <text x="500" y="312" text-anchor="middle" font-family="Bodoni Moda" font-weight="900" font-size="46"
-                  letter-spacing="3" style="font-variation-settings:'opsz' 14">KMSR</text>
-            <text x="500" y="652" text-anchor="middle" font-family="Archivo" font-weight="600" font-size="30"
-                  letter-spacing="11" style="font-stretch:125%">BIRU DAUN</text>
-          </g>
+        <clipPath id="${id}-top"><rect width="${W}" height="${TEAR}"/></clipPath>
+        <mask id="${id}-black" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
+          <rect width="${W}" height="${TEAR}" fill="#fff"/>
+          <g fill="#000">${star}${letters}</g>
+        </mask>
+        <mask id="${id}-red" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
+          <g fill="#fff">${star}</g>
+          <g fill="#000">${letters}</g>
         </mask>
         <linearGradient id="${id}-holo" x1="0" y1="0" x2="1" y2="1" class="holo-grad">
           <stop offset="0" stop-color="#ffc6ec"/><stop offset=".18" stop-color="#c9e9ff"/>
@@ -124,27 +139,43 @@
           <stop offset="1" stop-color="#fff" stop-opacity="0"/>
         </linearGradient>
       </defs>
+
       <g class="holo" clip-path="url(#${id}-clip)">
         <rect width="${W}" height="${H}" fill="url(#${id}-holo)"/>
-        <rect class="sheen" x="-500" y="-300" width="420" height="${H + 600}" fill="url(#${id}-sheen)" transform="rotate(20)"/>
+        <rect class="sheen" x="-300" y="-200" width="260" height="${H + 400}" fill="url(#${id}-sheen)" transform="rotate(18)"/>
       </g>
-      <rect width="${W}" height="${H}" fill="#0d0707" mask="url(#${id}-mask)"/>
-      <!-- the code: KMSR red printed straight onto the holo ribbon, so it reads metallic -->
-      <text class="code" x="500" y="447" text-anchor="middle" font-family="Bodoni Moda" font-weight="900" font-size="92"
-            letter-spacing="2" fill="#d4161f" style="font-variation-settings:'opsz' 16">${esc(code)}</text>
-      <path class="cut" d="${SHAPE}" fill="none" stroke="#ff00ff" stroke-width="5"/>
+
+      <g clip-path="url(#${id}-clip)">
+        <!-- top: black ink, star in red ink (metallic on holo), lettering left bare -->
+        <rect width="${W}" height="${H}" fill="#0d0707" mask="url(#${id}-black)"/>
+        <g clip-path="url(#${id}-top)"><rect width="${W}" height="${H}" fill="#e3202a" mask="url(#${id}-red)"/></g>
+
+        <!-- stub: bare holo, black ink on top -->
+        <g fill="#0d0707">
+          <line x1="40" y1="${TEAR + 12}" x2="${W - 40}" y2="${TEAR + 12}" stroke="#0d0707" stroke-width="4" stroke-dasharray="10 9"/>
+          <text x="34" y="706" font-family="JetBrains Mono" font-weight="500" font-size="20" letter-spacing="3">Nº</text>
+          <text x="${W - 34}" y="706" text-anchor="end" font-family="JetBrains Mono" font-weight="500" font-size="20" letter-spacing="3">ORDER CODE</text>
+          <text class="code" x="${W / 2}" y="768" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
+                font-size="62" letter-spacing="1">${esc(code)}</text>
+          ${barcode(code, 40, 790, W - 80, 64)}
+          <text x="${W / 2}" y="882" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="19"
+                letter-spacing="9" style="font-stretch:125%">BIRU DAUN</text>
+        </g>
+      </g>
+
+      <path class="cut" d="${SHAPE}" fill="none" stroke="#ff00ff" stroke-width="2.5"/>
     </svg>`;
   }
 
-  // long codes are squeezed to fit the ribbon instead of running off it
+  // a long code is squeezed to fit instead of running off the stub
   function fitCodes() {
     document.querySelectorAll(".sticker .code").forEach((t) => {
       t.removeAttribute("textLength");
       t.removeAttribute("lengthAdjust");
       let len = 0;
       try { len = t.getComputedTextLength(); } catch (e) {}
-      if (len > CODE_MAX) {
-        t.setAttribute("textLength", String(CODE_MAX));
+      if (len > W - 70) {
+        t.setAttribute("textLength", String(W - 70));
         t.setAttribute("lengthAdjust", "spacingAndGlyphs");
       }
     });
@@ -168,7 +199,7 @@
     for (let p = 0; p < total; p++) {
       const chunk = list.slice(p * PER_SHEET, (p + 1) * PER_SHEET);
       pages.push(`<div class="sheet">${chunk.map((c, i) => sticker(c, p * PER_SHEET + i)).join("")}
-        <span class="sheet__foot">KMSR holo stickers · sheet ${p + 1}/${total} · ${chunk.length} pcs · star 64 mm · magenta = cut, do not print</span></div>`);
+        <span class="sheet__foot">KMSR holo stickers · sheet ${p + 1}/${total} · ${chunk.length} pcs · 45×90 mm · magenta = cut, do not print</span></div>`);
     }
     sheetsEl.innerHTML = pages.join("");
     fitCodes();
@@ -189,7 +220,7 @@
   // holo sheen follows the pointer (screen only)
   document.addEventListener("pointermove", (e) => {
     const x = (e.clientX / innerWidth - 0.5) * 2;
-    document.querySelectorAll(".sticker .sheen").forEach((r) => r.setAttribute("x", String(-500 + (x + 1) * 700)));
+    document.querySelectorAll(".sticker .sheen").forEach((r) => r.setAttribute("x", String(-300 + (x + 1) * 380)));
     document.querySelectorAll(".holo-grad").forEach((g) => g.setAttribute("gradientTransform", `rotate(${x * 25} .5 .5)`));
   });
 
