@@ -4,7 +4,7 @@
   Paste codes, preview, then Print → Save as PDF (A4, scale 100%, margins none).
   Print on holographic sticker paper without white ink: every area with no ink shows the holo.
   Top half: black ink with KMSR and the side line knocked out, a red-ink star (metallic on holo).
-  Stub: bare holo with the code, a scannable Code 128 barcode and BIRU DAUN in black ink.
+  Stub: bare holo with the code, a QR code of the code (any phone camera reads it) and BIRU DAUN in black ink.
   Magenta line = die cut, do not print.
 -->
 <html lang="en">
@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=JetBrains+Mono:wght@500;800&display=block" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
   :root { --bg: #0d0707; --ink: #f5ede4; --muted: #a58f89; --red: #e3202a; --line: #321d1c; }
   * { box-sizing: border-box; }
@@ -76,6 +76,7 @@
   const W = 450, H = 900;          // sticker in 0.1 mm units (45 × 90 mm)
   const TEAR = 628, NR = 26, R = 28;
   const PER_SHEET = 12;
+  const CODE_MAX = 222;            // the big code must end before the QR's quiet zone
   const STAR = "50,0 61.8,35.3 99,35.3 69,57.1 80.4,92.6 50,70.6 19.6,92.6 31,57.1 1,35.3 38.2,35.3";
 
   // ticket outline: rounded corners, a half-circle bite on each side at the tear line
@@ -89,23 +90,29 @@
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-  // Code 128 bars for the code, as black rects fitted into the given box (JsBarcode builds them)
-  function barcode(code, x, y, w, h) {
-    if (!window.JsBarcode) return "";
-    const tmp = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    try {
-      JsBarcode(tmp, code, { format: "CODE128", displayValue: false, margin: 0, height: 100, width: 2 });
-    } catch (e) { return ""; }
-    const total = parseFloat(tmp.getAttribute("width")) || 1;
-    const k = w / total;
-    // the bars sit inside JsBarcode's <g> (the loose rect outside it is the white background)
-    return Array.from(tmp.querySelectorAll("g rect"))
-      .map((r) => `<rect x="${(x + parseFloat(r.getAttribute("x")) * k).toFixed(2)}" y="${y}" width="${(parseFloat(r.getAttribute("width")) * k).toFixed(2)}" height="${h}"/>`)
-      .join("");
+  // QR code of the order code as black squares in a size × size box. QR rather than a barcode
+  // because phone cameras (iPhone Camera, LINE, WhatsApp) only scan QR codes.
+  function qr(code, x, y, size) {
+    if (!window.qrcode) return "";
+    const q = qrcode(0, "M");
+    q.addData(code);
+    q.make();
+    const n = q.getModuleCount();
+    const m = size / n;
+    let d = "";
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (q.isDark(r, c)) d += `M${(x + c * m).toFixed(2)},${(y + r * m).toFixed(2)}h${m.toFixed(2)}v${m.toFixed(2)}h-${m.toFixed(2)}z`;
+      }
+    }
+    return `<path d="${d}" shape-rendering="crispEdges"/>`;
   }
 
   function sticker(code, i) {
     const id = "s" + i;
+    const dash = code.indexOf("-");
+    const head = dash > 0 ? code.slice(0, dash + 1) : "";
+    const tail = dash > 0 ? code.slice(dash + 1) : code;
     const star = `<polygon points="${STAR}" transform="translate(292 262) scale(4.3) translate(-50 -47.5)"/>`;
     // knocked out of BOTH the black and the red star → the letters are always holo
     const letters = `
@@ -153,12 +160,11 @@
         <!-- stub: bare holo, black ink on top -->
         <g fill="#0d0707">
           <line x1="40" y1="${TEAR + 12}" x2="${W - 40}" y2="${TEAR + 12}" stroke="#0d0707" stroke-width="4" stroke-dasharray="10 9"/>
-          <text x="34" y="706" font-family="JetBrains Mono" font-weight="500" font-size="20" letter-spacing="3">Nº</text>
-          <text x="${W - 34}" y="706" text-anchor="end" font-family="JetBrains Mono" font-weight="500" font-size="20" letter-spacing="3">ORDER CODE</text>
-          <text class="code" x="${W / 2}" y="768" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
-                font-size="62" letter-spacing="1">${esc(code)}</text>
-          ${barcode(code, 40, 790, W - 80, 64)}
-          <text x="${W / 2}" y="882" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="19"
+          <text x="34" y="700" font-family="JetBrains Mono" font-weight="500" font-size="18" letter-spacing="3">Nº ORDER</text>
+          <text x="32" y="754" font-family="JetBrains Mono" font-weight="800" font-size="36" letter-spacing="1">${esc(head)}</text>
+          <text class="code" x="30" y="814" font-family="JetBrains Mono" font-weight="800" font-size="56" letter-spacing="0">${esc(tail)}</text>
+          ${qr(code, W - 30 - 136, 668, 136)}
+          <text x="${W / 2}" y="878" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="19"
                 letter-spacing="9" style="font-stretch:125%">BIRU DAUN</text>
         </g>
       </g>
@@ -174,8 +180,8 @@
       t.removeAttribute("lengthAdjust");
       let len = 0;
       try { len = t.getComputedTextLength(); } catch (e) {}
-      if (len > W - 70) {
-        t.setAttribute("textLength", String(W - 70));
+      if (len > CODE_MAX) {
+        t.setAttribute("textLength", String(CODE_MAX));
         t.setAttribute("lengthAdjust", "spacingAndGlyphs");
       }
     });

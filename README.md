@@ -124,7 +124,8 @@ Then open http://localhost:5173.
 Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`, or on the live site
 `/tools/stickers.html`). It makes one 45 × 90 mm ticket sticker per order code, 12 per A4 sheet:
 a black top with a big red star, KMSR and ITB knocked out (holo), and a bare-holo stub below the tear line with
-the order code, a Code 128 barcode of the code, and BIRU DAUN. Scan-test the barcode on the proof with a phone app.
+the order code, a QR code of the order code (any phone camera reads it), and BIRU DAUN.
+Scan one QR on the printed proof sheet before printing the rest; holo glare can make scanning harder.
 
 1. **Get the codes**: in the Sheet, a spare cell:
    `=UNIQUE(FILTER(Orders!B2:B, Orders!L2:L="Confirmed"))` (use `;` instead of `,` if your Sheet is Indonesian).
