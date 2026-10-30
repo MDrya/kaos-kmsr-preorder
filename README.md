@@ -122,10 +122,15 @@ Then open http://localhost:5173.
 ## Holo stickers (one per order code)
 
 Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`, or on the live site
-`/tools/stickers.html`). It makes one 45 × 90 mm ticket sticker per order code, 12 per A4 sheet:
-a black top with a big red star, KMSR and ITB knocked out (holo), and a bare-holo stub below the tear line with
-the order code, a QR code of the order code (any phone camera reads it), and BIRU DAUN.
-Scan one QR on the printed proof sheet before printing the rest; holo glare can make scanning harder.
+`/tools/stickers.html`). It makes one sticker per order code, 12 per A4 sheet, in three designs
+(pick with the **Design** menu, or `?design=ticket|stamp|ace`):
+
+- **Holo ticket** (4.5 × 9 cm): black top with a big red star, KMSR and ITB knocked out (holo),
+  and a bare-holo stub with the order code, a barcode of the code (Google Lens reads it) and BIRU DAUN.
+- **Postage stamp** (4.5 × 6 cm): white scalloped stamp, red panel, KMSR / ITB on top, a holo-foil star,
+  the code and BIRU DAUN at the bottom.
+- **Ace of Stars** (5 × 7 cm): black playing card, red star in the middle, holo-foil "A" corners and frame,
+  a small code and BIRU DAUN at the foot.
 
 1. **Get the codes**: in the Sheet, a spare cell:
    `=UNIQUE(FILTER(Orders!B2:B, Orders!L2:L="Confirmed"))` (use `;` instead of `,` if your Sheet is Indonesian).
@@ -133,8 +138,14 @@ Scan one QR on the printed proof sheet before printing the rest; holo glare can 
 2. **Export**: click *Print / save PDF* → Save as PDF, **A4, scale 100%, margins none**.
    Make one PDF with the cut line on (for the die cut) and, if the shop asks, one with it off.
 3. **Brief for the print shop**:
-   > Cetak di **stiker hologram silver**, **tanpa tinta putih** — area yang tidak dicetak memang untuk efek hologram
-   > (tulisan KMSR/ITB dan bagian bawah tiket). Ukuran 4,5 × 9 cm, **kiss-cut mengikuti garis magenta**
-   > (garis magenta jangan ikut dicetak). Tinta: hitam + merah (bintang).
+   - Holo ticket:
+     > Cetak di **stiker hologram silver**, **tanpa tinta putih** — area yang tidak dicetak memang untuk efek hologram
+     > (tulisan KMSR/ITB dan bagian bawah tiket). Ukuran 4,5 × 9 cm, **kiss-cut mengikuti garis magenta**
+     > (garis magenta jangan ikut dicetak). Tinta: hitam + merah (bintang).
+   - Postage stamp / Ace of Stars:
+     > Cetak di **stiker vinyl/chromo putih**. Area **abu-abu muda** = **hot print foil hologram**
+     > (bintang di prangko; huruf A dan bingkai di kartu). Ukuran prangko 4,5 × 6 cm, kartu 5 × 7 cm,
+     > **kiss-cut mengikuti garis magenta** (garis magenta jangan ikut dicetak).
+     > Kalau tanpa foil, area abu-abu cetak silver saja.
 
 The pasted codes stay in your browser only; nothing is saved to the site.

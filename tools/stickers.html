@@ -1,10 +1,10 @@
 <!doctype html>
 <!--
-  KMSR holo ticket stickers — one per order code.
-  Paste codes, preview, then Print → Save as PDF (A4, scale 100%, margins none).
-  Print on holographic sticker paper without white ink: every area with no ink shows the holo.
-  Top half: black ink with KMSR and the side line knocked out, a red-ink star (metallic on holo).
-  Stub: bare holo with the code, a QR code of the code (any phone camera reads it) and BIRU DAUN in black ink.
+  KMSR holo stickers — one per order code, three designs (pick with the Design menu or
+  ?design=ticket|stamp|ace). Paste codes, preview, then Print → Save as PDF (A4, scale 100%, margins none).
+  Ticket: holographic sticker paper without white ink, so every area with no ink shows the holo.
+    The barcode is a real Code 128 of the order code (Google Lens reads it).
+  Stamp and Ace: normal sticker paper; the light-grey areas in the PDF mark the holo foil.
   Magenta line = die cut, do not print.
 -->
 <html lang="en">
@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=JetBrains+Mono:wght@500;800&display=block" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
 <style>
   :root { --bg: #0d0707; --ink: #f5ede4; --muted: #a58f89; --red: #e3202a; --line: #321d1c; }
   * { box-sizing: border-box; }
@@ -27,19 +27,23 @@
   textarea { width: 100%; min-height: 150px; padding: 12px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); font: 14px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
   .side { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
   .side label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  select { padding: 8px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); font: 14px "Archivo", sans-serif; }
   button { padding: 12px 16px; border: 1px solid var(--ink); background: transparent; color: var(--ink); font: 700 14px "Archivo", sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
   button.primary { background: var(--red); border-color: var(--red); }
   .count { color: var(--muted); font-size: 13px; }
 
   .sheets { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0 60px; }
-  .sheet {
-    width: 210mm; height: 297mm; padding: 5.5mm 6mm;
-    background: #fff; position: relative;
-    display: grid; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 90mm;
-    column-gap: 6mm; row-gap: 8mm; align-content: start; justify-content: center;
-  }
-  .sheet__foot { position: absolute; left: 6mm; bottom: 2.5mm; font: 7pt ui-monospace, Consolas, monospace; color: #999; }
-  .sticker { width: 45mm; height: 90mm; display: block; overflow: visible; }
+  .sheet { width: 210mm; height: 297mm; background: #fff; position: relative; display: grid; align-content: start; justify-content: center; }
+  .sheet__foot { position: absolute; left: 6mm; bottom: 2mm; font: 7pt ui-monospace, Consolas, monospace; color: #999; }
+  .sticker { display: block; overflow: visible; }
+
+  /* sheet layouts per design (12 per A4) */
+  .d-ticket { padding: 5.5mm 6mm; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 90mm; column-gap: 6mm; row-gap: 8mm; }
+  .d-ticket .sticker { width: 45mm; height: 90mm; }
+  .d-card { padding: 2.5mm 6mm; grid-template-columns: repeat(3, 50mm); grid-auto-rows: 70mm; column-gap: 8mm; row-gap: 4mm; }
+  .d-card .sticker { width: 50mm; height: 70mm; }
+  .d-stamp { padding: 6mm 6mm; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 60mm; column-gap: 6mm; row-gap: 8mm; }
+  .d-stamp .sticker { width: 45mm; height: 60mm; }
 
   .sticker .holo { display: none; }
   .holo-on .sticker .holo { display: inline; }
@@ -53,15 +57,25 @@
     .sheets { padding: 0; gap: 0; display: block; }
     .sheet { page-break-after: always; break-after: page; margin: 0; }
     .sticker .holo { display: none !important; }
+    .sticker .foil { fill: #c8c8c8 !important; }
+    .sticker .edge { display: none; }
+    .sticker .foil-stroke { stroke: #c8c8c8 !important; }
   }
 </style>
 </head>
 <body class="holo-on cuts-on">
   <section class="controls">
-    <h1>KMSR holo ticket stickers</h1>
+    <h1>KMSR holo stickers</h1>
     <p>One sticker per order code. Paste codes below (one per line — copy them from the Sheet). Duplicates and blank lines are ignored.</p>
     <textarea id="codes" spellcheck="false" placeholder="KM-0J4J0W&#10;KM-YNTN15"></textarea>
     <div class="side">
+      <label>Design
+        <select id="design">
+          <option value="ticket">Holo ticket (45×90 mm)</option>
+          <option value="stamp">Postage stamp (45×60 mm)</option>
+          <option value="ace">Ace of Stars card (50×70 mm)</option>
+        </select>
+      </label>
       <label><input type="checkbox" id="holo" checked> Holo preview (screen only)</label>
       <label><input type="checkbox" id="cuts" checked> Cut line (magenta)</label>
       <span class="count" id="count"></span>
@@ -73,121 +87,199 @@
 
 <script>
 (() => {
-  const W = 450, H = 900;          // sticker in 0.1 mm units (45 × 90 mm)
-  const TEAR = 628, NR = 26, R = 28;
   const PER_SHEET = 12;
-  const CODE_MAX = 222;            // the big code must end before the QR's quiet zone
   const STAR = "50,0 61.8,35.3 99,35.3 69,57.1 80.4,92.6 50,70.6 19.6,92.6 31,57.1 1,35.3 38.2,35.3";
-
-  // ticket outline: rounded corners, a half-circle bite on each side at the tear line
-  const SHAPE = [
-    `M${R},0 H${W - R} A${R},${R} 0 0 1 ${W},${R}`,
-    `V${TEAR - NR} A${NR},${NR} 0 0 0 ${W},${TEAR + NR}`,
-    `V${H - R} A${R},${R} 0 0 1 ${W - R},${H} H${R} A${R},${R} 0 0 1 0,${H - R}`,
-    `V${TEAR + NR} A${NR},${NR} 0 0 0 0,${TEAR - NR}`,
-    `V${R} A${R},${R} 0 0 1 ${R},0 Z`,
-  ].join(" ");
-
+  const INK = "#0d0707", RED = "#e3202a";
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const star = (cx, cy, s, rot = 0) =>
+    `<polygon points="${STAR}" transform="translate(${cx} ${cy}) rotate(${rot}) scale(${s}) translate(-50 -47.5)"/>`;
 
-  // QR code of the order code as black squares in a size × size box. QR rather than a barcode
-  // because phone cameras (iPhone Camera, LINE, WhatsApp) only scan QR codes.
-  function qr(code, x, y, size) {
-    if (!window.qrcode) return "";
-    const q = qrcode(0, "M");
-    q.addData(code);
-    q.make();
-    const n = q.getModuleCount();
-    const m = size / n;
-    let d = "";
-    for (let r = 0; r < n; r++) {
-      for (let c = 0; c < n; c++) {
-        if (q.isDark(r, c)) d += `M${(x + c * m).toFixed(2)},${(y + r * m).toFixed(2)}h${m.toFixed(2)}v${m.toFixed(2)}h-${m.toFixed(2)}z`;
-      }
-    }
-    return `<path d="${d}" shape-rendering="crispEdges"/>`;
+  // Real Code 128 of the order code — unique per sticker, and Google Lens can read it.
+  // Returns black rects fitted into the box (w × h). With rotate=true it runs top-to-bottom.
+  function barcode(code, x, y, w, h, rotate) {
+    if (!window.JsBarcode) return "";
+    const tmp = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    try { JsBarcode(tmp, code, { format: "CODE128", displayValue: false, margin: 0, height: 100, width: 2 }); }
+    catch (e) { return ""; }
+    const total = parseFloat(tmp.getAttribute("width")) || 1;
+    const len = rotate ? h : w, k = len / total;
+    // the bars sit inside JsBarcode's <g>; the loose rect outside it is the white background
+    return Array.from(tmp.querySelectorAll("g rect")).map((r) => {
+      const a = parseFloat(r.getAttribute("x")) * k, b = parseFloat(r.getAttribute("width")) * k;
+      return rotate
+        ? `<rect x="${x}" y="${(y + a).toFixed(2)}" width="${w}" height="${b.toFixed(2)}"/>`
+        : `<rect x="${(x + a).toFixed(2)}" y="${y}" width="${b.toFixed(2)}" height="${h}"/>`;
+    }).join("");
   }
 
-  function sticker(code, i) {
-    const id = "s" + i;
-    const dash = code.indexOf("-");
-    const head = dash > 0 ? code.slice(0, dash + 1) : "";
-    const tail = dash > 0 ? code.slice(dash + 1) : code;
-    const star = `<polygon points="${STAR}" transform="translate(292 262) scale(4.3) translate(-50 -47.5)"/>`;
-    // knocked out of BOTH the black and the red star → the letters are always holo
+  function holoDefs(id) {
+    return `
+      <linearGradient id="${id}-holo" x1="0" y1="0" x2="1" y2="1" class="holo-grad">
+        <stop offset="0" stop-color="#ffc6ec"/><stop offset=".18" stop-color="#c9e9ff"/>
+        <stop offset=".36" stop-color="#d4ffe0"/><stop offset=".54" stop-color="#fff3c4"/>
+        <stop offset=".72" stop-color="#e1ccff"/><stop offset=".9" stop-color="#bff6ff"/>
+        <stop offset="1" stop-color="#ffd0f0"/>
+      </linearGradient>
+      <linearGradient id="${id}-sheen" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".8"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>`;
+  }
+  const holoLayer = (id, W, H) => `
+      <g class="holo" clip-path="url(#${id}-clip)">
+        <rect width="${W}" height="${H}" fill="url(#${id}-holo)"/>
+        <rect class="sheen" x="${-W * 0.7}" y="${-H * 0.3}" width="${W * 0.55}" height="${H * 1.6}" fill="url(#${id}-sheen)" transform="rotate(18)" data-w="${W}"/>
+      </g>`;
+
+  // ticket outline with a half-circle bite on both edges at the tear line
+  function ticketShape(W, H, R, tear, NR, horizontal) {
+    if (!horizontal) {
+      return `M${R},0 H${W - R} A${R},${R} 0 0 1 ${W},${R} V${tear - NR} A${NR},${NR} 0 0 0 ${W},${tear + NR}
+        V${H - R} A${R},${R} 0 0 1 ${W - R},${H} H${R} A${R},${R} 0 0 1 0,${H - R}
+        V${tear + NR} A${NR},${NR} 0 0 0 0,${tear - NR} V${R} A${R},${R} 0 0 1 ${R},0 Z`;
+    }
+    return `M${R},0 H${tear - NR} A${NR},${NR} 0 0 0 ${tear + NR},0 H${W - R} A${R},${R} 0 0 1 ${W},${R}
+      V${H - R} A${R},${R} 0 0 1 ${W - R},${H} H${tear + NR} A${NR},${NR} 0 0 0 ${tear - NR},${H}
+      H${R} A${R},${R} 0 0 1 0,${H - R} V${R} A${R},${R} 0 0 1 ${R},0 Z`;
+  }
+
+  /* ---------- holo ticket (45 × 90 mm) ---------- */
+  function verticalTicket(code, id) {
+    const W = 450, H = 900, TEAR = 628;
+    const SHAPE = ticketShape(W, H, 28, TEAR, 26, false);
+    const st = star(292, 262, 4.3);
+    // lettering is knocked out of both the black and the red star, so it is always holo
     const letters = `
       <text transform="translate(146 318) rotate(-90)" text-anchor="middle" font-family="Archivo" font-weight="900"
             font-size="178" letter-spacing="-4">KMSR</text>
-      <text transform="translate(432 314) rotate(90)" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
-            font-size="19" letter-spacing="5">ADMIT ONE ✦ KAOS KMSR ✦ ITB</text>
       <text x="404" y="598" text-anchor="end" font-family="Archivo" font-weight="900" font-size="104"
             letter-spacing="-2" style="font-stretch:125%">ITB</text>`;
-
-    return `<svg class="sticker" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sticker ${esc(code)}">
+    return `<svg class="sticker" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <clipPath id="${id}-clip"><path d="${SHAPE}"/></clipPath>
         <clipPath id="${id}-top"><rect width="${W}" height="${TEAR}"/></clipPath>
         <mask id="${id}-black" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
-          <rect width="${W}" height="${TEAR}" fill="#fff"/>
-          <g fill="#000">${star}${letters}</g>
+          <rect width="${W}" height="${TEAR}" fill="#fff"/><g fill="#000">${st}${letters}</g>
         </mask>
         <mask id="${id}-red" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
-          <g fill="#fff">${star}</g>
-          <g fill="#000">${letters}</g>
+          <g fill="#fff">${st}</g><g fill="#000">${letters}</g>
         </mask>
-        <linearGradient id="${id}-holo" x1="0" y1="0" x2="1" y2="1" class="holo-grad">
-          <stop offset="0" stop-color="#ffc6ec"/><stop offset=".18" stop-color="#c9e9ff"/>
-          <stop offset=".36" stop-color="#d4ffe0"/><stop offset=".54" stop-color="#fff3c4"/>
-          <stop offset=".72" stop-color="#e1ccff"/><stop offset=".9" stop-color="#bff6ff"/>
-          <stop offset="1" stop-color="#ffd0f0"/>
-        </linearGradient>
-        <linearGradient id="${id}-sheen" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".8"/>
-          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-        </linearGradient>
+        ${holoDefs(id)}
       </defs>
-
-      <g class="holo" clip-path="url(#${id}-clip)">
-        <rect width="${W}" height="${H}" fill="url(#${id}-holo)"/>
-        <rect class="sheen" x="-300" y="-200" width="260" height="${H + 400}" fill="url(#${id}-sheen)" transform="rotate(18)"/>
-      </g>
-
+      ${holoLayer(id, W, H)}
       <g clip-path="url(#${id}-clip)">
-        <!-- top: black ink, star in red ink (metallic on holo), lettering left bare -->
-        <rect width="${W}" height="${H}" fill="#0d0707" mask="url(#${id}-black)"/>
-        <g clip-path="url(#${id}-top)"><rect width="${W}" height="${H}" fill="#e3202a" mask="url(#${id}-red)"/></g>
-
-        <!-- stub: bare holo, black ink on top -->
-        <g fill="#0d0707">
-          <line x1="40" y1="${TEAR + 12}" x2="${W - 40}" y2="${TEAR + 12}" stroke="#0d0707" stroke-width="4" stroke-dasharray="10 9"/>
-          <text x="34" y="700" font-family="JetBrains Mono" font-weight="500" font-size="18" letter-spacing="3">Nº ORDER</text>
-          <text x="32" y="754" font-family="JetBrains Mono" font-weight="800" font-size="36" letter-spacing="1">${esc(head)}</text>
-          <text class="code" x="30" y="814" font-family="JetBrains Mono" font-weight="800" font-size="56" letter-spacing="0">${esc(tail)}</text>
-          ${qr(code, W - 30 - 136, 668, 136)}
-          <text x="${W / 2}" y="878" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="19"
+        <rect width="${W}" height="${H}" fill="${INK}" mask="url(#${id}-black)"/>
+        <g clip-path="url(#${id}-top)"><rect width="${W}" height="${H}" fill="${RED}" mask="url(#${id}-red)"/></g>
+        <g fill="${INK}">
+          <line x1="40" y1="${TEAR + 12}" x2="${W - 40}" y2="${TEAR + 12}" stroke="${INK}" stroke-width="4" stroke-dasharray="10 9"/>
+          <text x="34" y="706" font-family="JetBrains Mono" font-weight="500" font-size="20" letter-spacing="3">Nº</text>
+          <text x="${W - 34}" y="706" text-anchor="end" font-family="JetBrains Mono" font-weight="500" font-size="20" letter-spacing="3">ORDER CODE</text>
+          <text class="code" data-max="${W - 70}" x="${W / 2}" y="768" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
+                font-size="62" letter-spacing="1">${esc(code)}</text>
+          ${barcode(code, 40, 790, W - 80, 64)}
+          <text x="${W / 2}" y="882" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="19"
                 letter-spacing="9" style="font-stretch:125%">BIRU DAUN</text>
         </g>
       </g>
-
       <path class="cut" d="${SHAPE}" fill="none" stroke="#ff00ff" stroke-width="2.5"/>
     </svg>`;
   }
 
-  // a long code is squeezed to fit instead of running off the stub
+  /* Stamp and Ace print on normal (white) sticker paper in black, red and cream. Holo is only
+     an accent: elements with class "foil" shimmer on screen and print as light grey, which
+     marks the area for the shop's holo foil (or leave them grey/silver). */
+  const CREAM = "#f5ede4";
+  const foilDefs = (id) => holoDefs(id);
+  const foil = (id) => `class="foil" fill="url(#${id}-holo)"`;
+  const roundRect = (W, H, R) =>
+    `M${R},0 H${W - R} A${R},${R} 0 0 1 ${W},${R} V${H - R} A${R},${R} 0 0 1 ${W - R},${H} H${R} A${R},${R} 0 0 1 0,${H - R} V${R} A${R},${R} 0 0 1 ${R},0 Z`;
+
+  /* ---------- postage stamp (45 × 60 mm) ----------
+     White scalloped stamp edge, red panel, KMSR across the top, a holo-foil star in the
+     middle, and the order code set as the stamp's value. */
+  function stampPath(W, H, r, step) {
+    const along = (len) => {
+      const n = Math.floor((len - step) / step);
+      const start = (len - n * step) / 2;
+      return Array.from({ length: n + 1 }, (_, i) => start + i * step);
+    };
+    const xs = along(W), ys = along(H);
+    let d = "M0,0 ";
+    xs.forEach((cx) => { d += `L${cx - r},0 A${r},${r} 0 0 0 ${cx + r},0 `; });
+    d += `L${W},0 `;
+    ys.forEach((cy) => { d += `L${W},${cy - r} A${r},${r} 0 0 0 ${W},${cy + r} `; });
+    d += `L${W},${H} `;
+    [...xs].reverse().forEach((cx) => { d += `L${cx + r},${H} A${r},${r} 0 0 0 ${cx - r},${H} `; });
+    d += `L0,${H} `;
+    [...ys].reverse().forEach((cy) => { d += `L0,${cy + r} A${r},${r} 0 0 0 0,${cy - r} `; });
+    return d + "Z";
+  }
+
+  function postageStamp(code, id) {
+    const W = 450, H = 600;
+    const SHAPE = stampPath(W, H, 13, 38);
+    return `<svg class="sticker" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs>${foilDefs(id)}</defs>
+      <path d="${SHAPE}" fill="#fff"/>
+      <path class="edge" d="${SHAPE}" fill="none" stroke="#d9d0cc" stroke-width="2"/>
+      <rect x="30" y="30" width="${W - 60}" height="${H - 60}" fill="${RED}"/>
+      <rect x="44" y="44" width="${W - 88}" height="${H - 88}" fill="none" stroke="${CREAM}" stroke-width="3"/>
+      <text x="${W / 2}" y="128" text-anchor="middle" font-family="Archivo" font-weight="900" font-size="76"
+            letter-spacing="-1" fill="${INK}" style="font-stretch:125%">KMSR</text>
+      <text x="${W / 2}" y="166" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="20"
+            letter-spacing="12" fill="${INK}" style="font-stretch:125%">ITB</text>
+      <g ${foil(id)}>${star(W / 2, 318, 2.35, -8)}</g>
+      <text class="code" data-max="330" x="${W / 2}" y="486" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
+            font-size="44" letter-spacing="1" fill="${INK}">${esc(code)}</text>
+      <text x="${W / 2}" y="528" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="17"
+            letter-spacing="8" fill="${INK}" style="font-stretch:125%">BIRU DAUN</text>
+      <path class="cut" d="${SHAPE}" fill="none" stroke="#ff00ff" stroke-width="2.5"/>
+    </svg>`;
+  }
+
+  /* ---------- Ace of Stars (50 × 70 mm) ----------
+     Just the red star in the middle and a small code + BIRU DAUN at the foot. The "A"
+     indices and the thin frame are the only foil. */
+  function aceCard(code, id) {
+    const W = 500, H = 700;
+    const SHAPE = roundRect(W, H, 30);
+    const index = `<text x="74" y="116" text-anchor="middle" font-family="Archivo" font-weight="900" font-size="76"
+                         style="font-stretch:110%">A</text>`;
+    return `<svg class="sticker" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs>${foilDefs(id)}</defs>
+      <path d="${SHAPE}" fill="${INK}"/>
+      <rect x="18" y="18" width="${W - 36}" height="${H - 36}" rx="20" fill="none" stroke="url(#${id}-holo)" stroke-width="4" class="foil-stroke"/>
+      <g ${foil(id)}>${index}<g transform="rotate(180 250 350)">${index}</g></g>
+      <g fill="${RED}">${star(74, 146, 0.4)}<g transform="rotate(180 250 350)">${star(74, 146, 0.4)}</g></g>
+      <g fill="${RED}">${star(W / 2, 352, 3.1)}</g>
+      <text class="code" data-max="190" x="${W / 2}" y="631" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
+            font-size="21" letter-spacing=".5" fill="${CREAM}">${esc(code)}</text>
+      <text x="${W / 2}" y="654" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="9"
+            letter-spacing="4.5" fill="${CREAM}" style="font-stretch:125%">BIRU DAUN</text>
+      <path class="cut" d="${SHAPE}" fill="none" stroke="#ff00ff" stroke-width="2.5"/>
+    </svg>`;
+  }
+
+  const DESIGNS = {
+    ticket: { cls: "d-ticket", size: "45×90 mm", make: verticalTicket },
+    stamp: { cls: "d-stamp", size: "45×60 mm", make: postageStamp },
+    ace: { cls: "d-card", size: "50×70 mm", make: aceCard },
+  };
+
+  // a long code is squeezed to fit instead of running off the sticker
   function fitCodes() {
     document.querySelectorAll(".sticker .code").forEach((t) => {
+      const max = Number(t.dataset.max) || 380;
       t.removeAttribute("textLength");
       t.removeAttribute("lengthAdjust");
       let len = 0;
       try { len = t.getComputedTextLength(); } catch (e) {}
-      if (len > CODE_MAX) {
-        t.setAttribute("textLength", String(CODE_MAX));
-        t.setAttribute("lengthAdjust", "spacingAndGlyphs");
-      }
+      if (len > max) { t.setAttribute("textLength", String(max)); t.setAttribute("lengthAdjust", "spacingAndGlyphs"); }
     });
   }
 
   const ta = document.getElementById("codes");
+  const sel = document.getElementById("design");
   const sheetsEl = document.getElementById("sheets");
   const countEl = document.getElementById("count");
 
@@ -199,26 +291,33 @@
 
   function render() {
     const list = codes();
-    try { localStorage.setItem("kmsr-sticker-codes", ta.value); } catch (e) {}
+    const d = DESIGNS[sel.value] || DESIGNS.ticket;
+    try { localStorage.setItem("kmsr-sticker-codes", ta.value); localStorage.setItem("kmsr-sticker-design", sel.value); } catch (e) {}
     const total = Math.max(1, Math.ceil(list.length / PER_SHEET));
     const pages = [];
     for (let p = 0; p < total; p++) {
       const chunk = list.slice(p * PER_SHEET, (p + 1) * PER_SHEET);
-      pages.push(`<div class="sheet">${chunk.map((c, i) => sticker(c, p * PER_SHEET + i)).join("")}
-        <span class="sheet__foot">KMSR holo stickers · sheet ${p + 1}/${total} · ${chunk.length} pcs · 45×90 mm · magenta = cut, do not print</span></div>`);
+      pages.push(`<div class="sheet ${d.cls}">${chunk.map((c, i) => d.make(c, "s" + (p * PER_SHEET + i))).join("")}
+        <span class="sheet__foot">KMSR holo stickers · design ${sel.value} · sheet ${p + 1}/${total} · ${chunk.length} pcs · ${d.size} · magenta = cut, do not print</span></div>`);
     }
     sheetsEl.innerHTML = pages.join("");
     fitCodes();
     countEl.textContent = `${list.length} sticker${list.length === 1 ? "" : "s"} · ${Math.ceil(list.length / PER_SHEET) || 0} A4 sheet(s)`;
   }
 
-  try { ta.value = localStorage.getItem("kmsr-sticker-codes") || ""; } catch (e) {}
   const params = new URLSearchParams(location.search);
+  try {
+    ta.value = localStorage.getItem("kmsr-sticker-codes") || "";
+    sel.value = localStorage.getItem("kmsr-sticker-design") || "ticket";
+  } catch (e) {}
   if (params.get("codes")) ta.value = params.get("codes").split(",").join("\n");
+  if (params.get("design")) sel.value = params.get("design");
+  if (!DESIGNS[sel.value]) sel.value = "ticket";
   if (!ta.value) ta.value = "KM-0J4J0W\nKM-YNTN15\nKM-2MYTHX";
   if (params.has("nocut")) { document.body.classList.remove("cuts-on"); document.getElementById("cuts").checked = false; }
 
   ta.addEventListener("input", render);
+  sel.addEventListener("change", render);
   document.getElementById("holo").addEventListener("change", (e) => document.body.classList.toggle("holo-on", e.target.checked));
   document.getElementById("cuts").addEventListener("change", (e) => document.body.classList.toggle("cuts-on", e.target.checked));
   document.getElementById("print").addEventListener("click", () => window.print());
@@ -226,7 +325,10 @@
   // holo sheen follows the pointer (screen only)
   document.addEventListener("pointermove", (e) => {
     const x = (e.clientX / innerWidth - 0.5) * 2;
-    document.querySelectorAll(".sticker .sheen").forEach((r) => r.setAttribute("x", String(-300 + (x + 1) * 380)));
+    document.querySelectorAll(".sticker .sheen").forEach((r) => {
+      const W = Number(r.dataset.w) || 450;
+      r.setAttribute("x", String(-W * 0.7 + (x + 1) * W * 0.85));
+    });
     document.querySelectorAll(".holo-grad").forEach((g) => g.setAttribute("gradientTransform", `rotate(${x * 25} .5 .5)`));
   });
 
