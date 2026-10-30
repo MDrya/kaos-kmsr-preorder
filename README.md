@@ -142,10 +142,15 @@ Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`
      > Cetak di **stiker hologram silver**, **tanpa tinta putih** — area yang tidak dicetak memang untuk efek hologram
      > (tulisan KMSR/ITB dan bagian bawah tiket). Ukuran 4,5 × 9 cm, **kiss-cut mengikuti garis magenta**
      > (garis magenta jangan ikut dicetak). Tinta: hitam + merah (bintang).
-   - Postage stamp / Ace of Stars:
-     > Cetak di **stiker vinyl/chromo putih**. Area **abu-abu muda** = **hot print foil hologram**
-     > (bintang di prangko; huruf A dan bingkai di kartu). Ukuran prangko 4,5 × 6 cm, kartu 5 × 7 cm,
+   - Postage stamp / Ace of Stars: send **two PDFs** of the same codes, same order:
+     1. **Colour file**: the normal export (the light-grey areas are where the foil goes).
+     2. **Foil file**: tick **Foil layer only** (or open with `&foil`) and export again. Only the foil
+        shapes are left, in solid black: the stamp's star, the Ace's "A" corners and frame.
+
+     > Cetak di **stiker vinyl/chromo putih** + **hot print foil hologram**. Ada 2 file:
+     > **file warna** dan **file foil** (area **hitam** di file foil = foil hologram; posisinya sama persis dengan
+     > area abu-abu di file warna). Ukuran prangko 4,5 × 6 cm, kartu 5 × 7 cm,
      > **kiss-cut mengikuti garis magenta** (garis magenta jangan ikut dicetak).
-     > Kalau tanpa foil, area abu-abu cetak silver saja.
+     > Kalau tidak bisa foil, area abu-abu cetak silver saja.
 
 The pasted codes stay in your browser only; nothing is saved to the site.

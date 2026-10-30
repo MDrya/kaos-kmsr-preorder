@@ -49,6 +49,11 @@
   .holo-on .sticker .holo { display: inline; }
   .sticker .cut { display: none; }
   .cuts-on .sticker .cut { display: inline; }
+  /* foil layer: only the foil shapes, in solid black (the shop's hot-foil file) */
+  .foil-only .sticker > :not(defs):not(.foil):not(.foil-stroke):not(.cut) { visibility: hidden; }
+  .foil-only .sticker .foil { fill: #000 !important; }
+  .foil-only .sticker .foil-stroke { stroke: #000 !important; }
+  .foil-only .sheet__foot .layer::after { content: " · FOIL LAYER (black = holo foil)"; color: #000; font-weight: 700; }
 
   @media print {
     @page { size: A4; margin: 0; }
@@ -78,6 +83,7 @@
       </label>
       <label><input type="checkbox" id="holo" checked> Holo preview (screen only)</label>
       <label><input type="checkbox" id="cuts" checked> Cut line (magenta)</label>
+      <label><input type="checkbox" id="foilonly"> Foil layer only (stamp / Ace)</label>
       <span class="count" id="count"></span>
       <button class="primary" id="print">Print / save PDF</button>
       <span class="count">PDF: A4 · scale 100% · margins none</span>
@@ -302,7 +308,7 @@
     for (let p = 0; p < total; p++) {
       const chunk = list.slice(p * PER_SHEET, (p + 1) * PER_SHEET);
       pages.push(`<div class="sheet ${d.cls}">${chunk.map((c, i) => d.make(c, "s" + (p * PER_SHEET + i))).join("")}
-        <span class="sheet__foot">KMSR holo stickers · design ${sel.value} · sheet ${p + 1}/${total} · ${chunk.length} pcs · ${d.size} · magenta = cut, do not print</span></div>`);
+        <span class="sheet__foot">KMSR holo stickers · design ${sel.value} · sheet ${p + 1}/${total} · ${chunk.length} pcs · ${d.size} · magenta = cut, do not print<span class="layer"></span></span></div>`);
     }
     sheetsEl.innerHTML = pages.join("");
     fitCodes();
@@ -319,11 +325,13 @@
   if (!DESIGNS[sel.value]) sel.value = "ticket";
   if (!ta.value) ta.value = "KM-0J4J0W\nKM-YNTN15\nKM-2MYTHX";
   if (params.has("nocut")) { document.body.classList.remove("cuts-on"); document.getElementById("cuts").checked = false; }
+  if (params.has("foil")) { document.body.classList.add("foil-only"); document.getElementById("foilonly").checked = true; }
 
   ta.addEventListener("input", render);
   sel.addEventListener("change", render);
   document.getElementById("holo").addEventListener("change", (e) => document.body.classList.toggle("holo-on", e.target.checked));
   document.getElementById("cuts").addEventListener("change", (e) => document.body.classList.toggle("cuts-on", e.target.checked));
+  document.getElementById("foilonly").addEventListener("change", (e) => document.body.classList.toggle("foil-only", e.target.checked));
   document.getElementById("print").addEventListener("click", () => window.print());
 
   // holo sheen follows the pointer (screen only)
