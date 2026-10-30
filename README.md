@@ -129,7 +129,7 @@ Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`
   and a bare-holo stub with the order code, a barcode of the code (Google Lens reads it) and BIRU DAUN.
 - **Postage stamp** (4.5 × 6 cm): white scalloped stamp, red panel, KMSR / ITB on top, a holo-foil star,
   the code and BIRU DAUN at the bottom.
-- **Ace of Stars** (5 × 7 cm): black playing card, red star in the middle, holo-foil "A" corners and frame,
+- **Ace of Stars** (5 × 7 cm): black playing card, small KMSR / ITB on top, red star in the middle, holo-foil "A" corners and frame,
   a small code and BIRU DAUN at the foot.
 
 1. **Get the codes**: in the Sheet, a spare cell:

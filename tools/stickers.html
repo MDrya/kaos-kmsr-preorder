@@ -238,7 +238,7 @@
   }
 
   /* ---------- Ace of Stars (50 × 70 mm) ----------
-     Just the red star in the middle and a small code + BIRU DAUN at the foot. The "A"
+     A small KMSR / ITB on top, the red star in the middle, a small code + BIRU DAUN at the foot. The "A"
      indices and the thin frame are the only foil. */
   function aceCard(code, id) {
     const W = 500, H = 700;
@@ -251,7 +251,11 @@
       <rect x="18" y="18" width="${W - 36}" height="${H - 36}" rx="20" fill="none" stroke="url(#${id}-holo)" stroke-width="4" class="foil-stroke"/>
       <g ${foil(id)}>${index}<g transform="rotate(180 250 350)">${index}</g></g>
       <g fill="${RED}">${star(74, 126, 0.4)}<g transform="rotate(180 250 350)">${star(74, 126, 0.4)}</g></g>
-      <g fill="${RED}">${star(W / 2, 350, 2.1)}</g>
+      <text x="${W / 2}" y="62" text-anchor="middle" font-family="Archivo" font-weight="900" font-size="22"
+            letter-spacing="1" fill="${CREAM}" style="font-stretch:125%">KMSR</text>
+      <text x="${W / 2}" y="84" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="9"
+            letter-spacing="4.5" fill="${CREAM}" style="font-stretch:125%">ITB</text>
+      <g fill="${RED}">${star(W / 2, 350, 2.5)}</g>
       <text class="code" data-max="190" x="${W / 2}" y="631" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
             font-size="21" letter-spacing=".5" fill="${CREAM}">${esc(code)}</text>
       <text x="${W / 2}" y="654" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="9"
