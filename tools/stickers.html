@@ -37,12 +37,12 @@
   .sheet__foot { position: absolute; left: 6mm; bottom: 2mm; font: 7pt ui-monospace, Consolas, monospace; color: #999; }
   .sticker { display: block; overflow: visible; }
 
-  /* sheet layouts per design (12 per A4) */
+  /* sheet layouts per design (ticket and card 12 per A4, stamp 16) */
   .d-ticket { padding: 5.5mm 6mm; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 90mm; column-gap: 6mm; row-gap: 8mm; }
   .d-ticket .sticker { width: 45mm; height: 90mm; }
   .d-card { padding: 2.5mm 6mm; grid-template-columns: repeat(3, 50mm); grid-auto-rows: 70mm; column-gap: 8mm; row-gap: 4mm; }
   .d-card .sticker { width: 50mm; height: 70mm; }
-  .d-stamp { padding: 6mm 6mm; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 60mm; column-gap: 6mm; row-gap: 8mm; }
+  .d-stamp { padding: 12mm 6mm; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 60mm; column-gap: 6mm; row-gap: 9mm; }
   .d-stamp .sticker { width: 45mm; height: 60mm; }
 
   .sticker .holo { display: none; }
@@ -87,7 +87,6 @@
 
 <script>
 (() => {
-  const PER_SHEET = 12;
   const STAR = "50,0 61.8,35.3 99,35.3 69,57.1 80.4,92.6 50,70.6 19.6,92.6 31,57.1 1,35.3 38.2,35.3";
   const INK = "#0d0707", RED = "#e3202a";
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -266,7 +265,7 @@
 
   const DESIGNS = {
     ticket: { cls: "d-ticket", size: "45×90 mm", make: verticalTicket },
-    stamp: { cls: "d-stamp", size: "45×60 mm", make: postageStamp },
+    stamp: { cls: "d-stamp", size: "45×60 mm", make: postageStamp, perSheet: 16 },
     ace: { cls: "d-card", size: "50×70 mm", make: aceCard },
   };
 
@@ -297,6 +296,7 @@
     const list = codes();
     const d = DESIGNS[sel.value] || DESIGNS.ticket;
     try { localStorage.setItem("kmsr-sticker-codes", ta.value); localStorage.setItem("kmsr-sticker-design", sel.value); } catch (e) {}
+    const PER_SHEET = d.perSheet || 12;
     const total = Math.max(1, Math.ceil(list.length / PER_SHEET));
     const pages = [];
     for (let p = 0; p < total; p++) {

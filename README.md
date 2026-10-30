@@ -122,7 +122,7 @@ Then open http://localhost:5173.
 ## Holo stickers (one per order code)
 
 Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`, or on the live site
-`/tools/stickers.html`). It makes one sticker per order code, 12 per A4 sheet, in three designs
+`/tools/stickers.html`). It makes one sticker per order code (12 per A4 sheet, 16 for the stamp) in three designs
 (pick with the **Design** menu, or `?design=ticket|stamp|ace`):
 
 - **Holo ticket** (4.5 × 9 cm): black top with a big red star, KMSR and ITB knocked out (holo),
