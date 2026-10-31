@@ -13,7 +13,7 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/gif", "application/pdf"];
 
 // Pickup broadcast: edit this line, save, then run pickupLinks (see README "Pickup broadcast").
-const PICKUP = "hari Minggu/Senin (jam dan lokasi menyusul)";
+const PICKUP = "hari Senin, 2 November, jam 16.30–18.30 di CAD";
 
 const ORDER_HEADERS = [
   "Submitted", "Order ref", "Product", "Size", "Qty", "Unit price", "Total",
