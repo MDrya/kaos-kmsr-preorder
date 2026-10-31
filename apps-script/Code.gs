@@ -12,9 +12,12 @@ const PROOF_FOLDER = "KMSR pre-order payment proofs";
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/gif", "application/pdf"];
 
+// Pickup broadcast: edit this line, save, then run pickupLinks (see README "Pickup broadcast").
+const PICKUP = "hari Minggu/Senin (jam dan lokasi menyusul)";
+
 const ORDER_HEADERS = [
   "Submitted", "Order ref", "Product", "Size", "Qty", "Unit price", "Total",
-  "Name", "WhatsApp", "Notes", "Payment proof", "Status", "WhatsApp confirm",
+  "Name", "WhatsApp", "Notes", "Payment proof", "Status", "WhatsApp confirm", "WhatsApp pickup",
 ];
 const CUSTOM_HEADERS = ["Submitted", "Name", "WhatsApp", "Size", "Request"];
 const COL = {};
@@ -88,6 +91,7 @@ function doPost(e) {
         i === 0 ? notes : "",
         proofUrl,
         "Pending",
+        "",
         "",
       ];
     });
@@ -197,9 +201,53 @@ function waFormula(row, all) {
     "Pssttt, pingin kaosnya diproduksi:D share link ke teman kamu, capai milestonesnya bersama :DD\n" +
     "https://kaos-kmsr-preorder.vercel.app";
 
+  return waLink(phone, msg, "Kirim WA ➜");
+}
+
+function waLink(phone, msg, label) {
   // api.whatsapp.com keeps emoji intact; the wa.me short link can turn them into "?"
   const url = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + encodeURIComponent(msg);
-  return '=HYPERLINK("' + url.replace(/"/g, '""') + '", "Kirim WA ➜")';
+  return '=HYPERLINK("' + url.replace(/"/g, '""') + '", "' + label + '")';
+}
+
+// Run from the editor when the tees are ready to pick up. Fills "WhatsApp pickup" with a
+// one-tap message for every Confirmed order (on its first row only, so each buyer gets one
+// link). Change PICKUP and run it again to rewrite all the links.
+function pickupLinks() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ORDERS_SHEET);
+  const col = COL["WhatsApp pickup"] + 1;
+  sh.getRange(1, col).setValue("WhatsApp pickup").setFontWeight("bold");
+  const all = orderRows();
+  const done = {};
+  const out = all.map(function (row) {
+    const ref = String(row[COL["Order ref"]]);
+    const confirmed = String(row[COL["Status"]]).trim().toLowerCase() === "confirmed";
+    if (!confirmed || !ref || done[ref]) return [""];
+    done[ref] = true;
+    return [pickupFormula(row, all)];
+  });
+  if (out.length) sh.getRange(2, col, out.length, 1).setValues(out);
+}
+
+function pickupFormula(row, all) {
+  const phone = waNumber(row[COL["WhatsApp"]]);
+  if (!phone) return "";
+  const ref = String(row[COL["Order ref"]]);
+  const items = all.filter(function (r) {
+    return String(r[COL["Order ref"]]) === ref && String(r[COL["Status"]]).trim().toLowerCase() === "confirmed";
+  }).map(function (r) {
+    return "• " + r[COL["Product"]] + " " + r[COL["Size"]] + " × " + r[COL["Qty"]];
+  }).join("\n");
+  const firstName = String(row[COL["Name"]]).trim().split(/\s+/)[0];
+
+  const msg =
+    "Halo " + firstName + "!\n" +
+    "Kaos KMSR kamu sudah jadi ★\n\n" +
+    "Kode order: " + ref + "\n" + items + "\n\n" +
+    "Kaos baru bisa diambil " + PICKUP + ". Sebutkan kode order di atas saat pengambilan ya.\n\n" +
+    "Disclaimer: kaos ini bukan merchandise resmi dari KMSR ITB.\n\n" +
+    "Terima kasih sudah ikut pre-order!";
+  return waLink(phone, msg, "Kirim pickup ➜");
 }
 
 // 0812… / +62812… / 812… → 62812…

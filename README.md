@@ -30,6 +30,20 @@ link. Click it and WhatsApp opens a chat with that buyer with the confirmation a
 written (order code, tees, total) — just press send. Set the row back to `Pending` and the
 link disappears. For an order with several tees, the message lists all of them.
 
+### Pickup broadcast
+
+When the tees are ready, the **WhatsApp pickup** column (next to WhatsApp confirm) gets a
+**Kirim pickup ➜** link for every Confirmed order: one link per order code, with the order
+code, the tees, the pickup day, and a note that the tee isn't official KMSR ITB merch.
+
+1. In Apps Script, paste the new `Code.gs` and edit the `PICKUP` line at the top
+   (e.g. `"hari Senin, 9 November, jam 16.00 di …"`). Save.
+2. Pick **pickupLinks** in the function dropdown → **Run**.
+3. Click each link and press send.
+
+Changed the day? Edit `PICKUP` and run **pickupLinks** again; it rewrites every link.
+No redeploy needed for this.
+
 ## Connecting the order form (Google Sheet)
 
 One-time setup, about 5 minutes:
