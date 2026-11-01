@@ -2,7 +2,8 @@
 <!--
   KMSR holo stickers — one per order code. Designs: ?design=ticket|stamp|ace, or set (one of each
   per code). Paper: ?paper=a4|a3|a3plus (A3 and A3+ are landscape). ?fill=10 tops the codes up with
-  made-up ones until there are 10 full sheets. Then Print → Save as PDF (scale 100%, margins none).
+  made-up ones until there are 10 full sheets. Then Print → Save as PDF (scale 100%, margins none),
+  once with File = Cetak (art, ?nocut) and once with File = Cutting (cut lines only, ?cutfile).
   Print on holographic vinyl without white ink: everything left white in the PDF shows the holo.
   The ticket's barcode is a real Code 128 of the order code (Google Lens reads it).
   Magenta line = die cut, do not print.
@@ -45,6 +46,8 @@
   .holo-on .sticker .holo { display: inline; }
   .sticker .cut { display: none; }
   .cuts-on .sticker .cut { display: inline; }
+  /* cutting file: only the cut lines, same positions as the print file */
+  .cut-only .sticker > :not(.cut) { visibility: hidden; }
 
   @media print {
     body { background: #fff; }
@@ -82,8 +85,14 @@
       </label>
       <span class="fill"><label><input type="checkbox" id="fill"> Fill to</label>
         <input type="number" id="fillsheets" min="1" max="50" value="10"> sheets with made-up codes</span>
+      <label>File
+        <select id="mode">
+          <option value="preview">Preview (art + cut line)</option>
+          <option value="print">Cetak: art only, no cut line</option>
+          <option value="cut">Cutting: cut line only</option>
+        </select>
+      </label>
       <label><input type="checkbox" id="holo" checked> Holo preview (screen only)</label>
-      <label><input type="checkbox" id="cuts" checked> Cut line (magenta)</label>
       <span class="count" id="count"></span>
       <button class="primary" id="print">Print / save PDF</button>
       <span class="count" id="pdfnote"></span>
@@ -488,13 +497,21 @@
   if (!sel.value) sel.value = "set";
   if (!PAPERS[paperSel.value]) paperSel.value = "a3plus";
   if (!ta.value) ta.value = "KM-0J4J0W\nKM-YNTN15\nKM-2MYTHX";
-  if (params.has("nocut")) { document.body.classList.remove("cuts-on"); document.getElementById("cuts").checked = false; }
+  // print and cutting files are two PDFs of the same sheets; ?nocut = print file, ?cutfile = cutting file
+  const modeSel = document.getElementById("mode");
+  const setMode = () => {
+    document.body.classList.toggle("cuts-on", modeSel.value !== "print");
+    document.body.classList.toggle("cut-only", modeSel.value === "cut");
+  };
+  if (params.has("nocut")) modeSel.value = "print";
+  if (params.has("cutfile")) modeSel.value = "cut";
+  setMode();
+  modeSel.addEventListener("change", setMode);
 
   [ta, fillNum].forEach((el) => el.addEventListener("input", render));
   [sel, paperSel, fillBox].forEach((el) => el.addEventListener("change", render));
   addEventListener("resize", render);
   document.getElementById("holo").addEventListener("change", (e) => document.body.classList.toggle("holo-on", e.target.checked));
-  document.getElementById("cuts").addEventListener("change", (e) => document.body.classList.toggle("cuts-on", e.target.checked));
   document.getElementById("print").addEventListener("click", () => window.print());
 
   // holo sheen follows the pointer (screen only)

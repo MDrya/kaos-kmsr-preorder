@@ -154,12 +154,16 @@ the same list) so the last sheet isn't half empty — e.g. 10 sheets of A3+ = 11
 1. **Get the codes**: in the Sheet, a spare cell:
    `=UNIQUE(FILTER(Orders!B2:B, Orders!L2:L="Confirmed"))` (use `;` instead of `,` if your Sheet is Indonesian).
    Copy that column and paste it into the tool's box. Real codes come first, made-up ones after.
-2. **Export**: click *Print / save PDF* → Save as PDF, **scale 100%, margins none** (the paper size is set by the tool).
-   Make one PDF with the cut line on (for the die cut) and, if the shop asks, one with it off.
+2. **Export two PDFs** (the shop wants *file cetak dan cutting terpisah*): click *Print / save PDF* → Save as PDF,
+   **scale 100%, margins none** (the paper size is set by the tool), once per **File** setting:
+   - **Cetak**: the art only, no cut line → `stickers-cetak.pdf`
+   - **Cutting**: only the magenta cut lines, same positions → `stickers-cutting.pdf`
+
+   Keep the codes, design, paper and fill the same for both so they line up.
 3. **Brief for the print shop**:
    > Cetak di **vinyl hologram**, ukuran **A3+ (32 × 48 cm)**, 10 lembar. **Tanpa tinta putih**: area **putih** di file
-   > = tidak dicetak, jadi hologram. Tinta: hitam + merah (+ krem). **Kiss-cut mengikuti garis magenta**
-   > (garis magenta jangan ikut dicetak).
+   > = tidak dicetak, jadi hologram. Tinta: hitam + merah (+ krem). File cetak dan file cutting terpisah,
+   > posisinya sama persis: **kiss-cut mengikuti garis magenta** di file cutting.
 
 Red and black printed straight on holo vinyl look a little metallic; that's normal without a white underlayer.
 The pasted codes stay in your browser only; nothing is saved to the site.
