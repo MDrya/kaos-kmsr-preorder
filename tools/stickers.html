@@ -1,10 +1,10 @@
 <!doctype html>
 <!--
-  KMSR holo stickers — one per order code, three designs (pick with the Design menu or
-  ?design=ticket|stamp|ace). Paste codes, preview, then Print → Save as PDF (A4, scale 100%, margins none).
-  Ticket: holographic sticker paper without white ink, so every area with no ink shows the holo.
-    The barcode is a real Code 128 of the order code (Google Lens reads it).
-  Stamp and Ace: normal sticker paper; the light-grey areas in the PDF mark the holo foil.
+  KMSR holo stickers — one per order code. Designs: ?design=ticket|stamp|ace, or set (one of each
+  per code). Paper: ?paper=a4|a3|a3plus (A3 and A3+ are landscape). ?fill=10 tops the codes up with
+  made-up ones until there are 10 full sheets. Then Print → Save as PDF (scale 100%, margins none).
+  Print on holographic vinyl without white ink: everything left white in the PDF shows the holo.
+  The ticket's barcode is a real Code 128 of the order code (Google Lens reads it).
   Magenta line = die cut, do not print.
 -->
 <html lang="en">
@@ -32,39 +32,30 @@
   button.primary { background: var(--red); border-color: var(--red); }
   .count { color: var(--muted); font-size: 13px; }
 
-  .sheets { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0 60px; }
-  .sheet { width: 210mm; height: 297mm; background: #fff; position: relative; display: grid; align-content: start; justify-content: center; }
-  .sheet__foot { position: absolute; left: 6mm; bottom: 2mm; font: 7pt ui-monospace, Consolas, monospace; color: #999; }
-  .sticker { display: block; overflow: visible; }
+  .fill { display: flex; align-items: center; gap: 8px; }
+  .fill input[type="number"] { width: 64px; padding: 6px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); font: 14px "Archivo", sans-serif; }
 
-  /* sheet layouts per design (ticket and card 12 per A4, stamp 16) */
-  .d-ticket { padding: 5.5mm 6mm; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 90mm; column-gap: 6mm; row-gap: 8mm; }
-  .d-ticket .sticker { width: 45mm; height: 90mm; }
-  .d-card { padding: 2.5mm 6mm; grid-template-columns: repeat(3, 50mm); grid-auto-rows: 70mm; column-gap: 8mm; row-gap: 4mm; }
-  .d-card .sticker { width: 50mm; height: 70mm; }
-  .d-stamp { padding: 12mm 6mm; grid-template-columns: repeat(4, 45mm); grid-auto-rows: 60mm; column-gap: 6mm; row-gap: 9mm; }
-  .d-stamp .sticker { width: 45mm; height: 60mm; }
+  /* sheets are drawn at real size (mm) and zoomed down to fit the screen */
+  .sheets { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0 60px; }
+  .sheet { background: #fff; position: relative; flex: none; }
+  .slot { position: absolute; }
+  .sticker { display: block; width: 100%; height: 100%; overflow: visible; }
 
   .sticker .holo { display: none; }
   .holo-on .sticker .holo { display: inline; }
   .sticker .cut { display: none; }
   .cuts-on .sticker .cut { display: inline; }
-  /* foil layer: only the foil shapes, in solid black (the shop's hot-foil file) */
-  .foil-only .sticker > :not(defs):not(.foil):not(.foil-stroke):not(.cut) { visibility: hidden; }
-  .foil-only .sticker .foil { fill: #000 !important; }
-  .foil-only .sticker .foil-stroke { stroke: #000 !important; }
-  .foil-only .sheet__foot .layer::after { content: " · FOIL LAYER (black = holo foil)"; color: #000; font-weight: 700; }
 
   @media print {
-    @page { size: A4; margin: 0; }
     body { background: #fff; }
     .controls { display: none; }
-    .sheets { padding: 0; gap: 0; display: block; }
+    .sheets { padding: 0; gap: 0; display: block; zoom: 1 !important; }
     .sheet { page-break-after: always; break-after: page; margin: 0; }
     .sticker .holo { display: none !important; }
-    .sticker .foil { fill: #c8c8c8 !important; }
+    /* holo vinyl: no ink = holo, so the holo parts go out white */
+    .sticker .foil { fill: #fff !important; }
     .sticker .edge { display: none; }
-    .sticker .foil-stroke { stroke: #c8c8c8 !important; }
+    .sticker .foil-stroke { stroke: #fff !important; }
   }
 </style>
 </head>
@@ -76,17 +67,26 @@
     <div class="side">
       <label>Design
         <select id="design">
+          <option value="set">All three, one set per code</option>
           <option value="ticket">Holo ticket (45×90 mm)</option>
           <option value="stamp">Postage stamp (45×60 mm)</option>
           <option value="ace">Ace of Stars card (50×70 mm)</option>
         </select>
       </label>
+      <label>Paper
+        <select id="paper">
+          <option value="a3plus">A3+ landscape (48×32 cm)</option>
+          <option value="a3">A3 landscape (42×29.7 cm)</option>
+          <option value="a4">A4 portrait</option>
+        </select>
+      </label>
+      <span class="fill"><label><input type="checkbox" id="fill"> Fill to</label>
+        <input type="number" id="fillsheets" min="1" max="50" value="10"> sheets with made-up codes</span>
       <label><input type="checkbox" id="holo" checked> Holo preview (screen only)</label>
       <label><input type="checkbox" id="cuts" checked> Cut line (magenta)</label>
-      <label><input type="checkbox" id="foilonly"> Foil layer only (stamp / Ace)</label>
       <span class="count" id="count"></span>
       <button class="primary" id="print">Print / save PDF</button>
-      <span class="count">PDF: A4 · scale 100% · margins none</span>
+      <span class="count" id="pdfnote"></span>
     </div>
   </section>
   <main class="sheets" id="sheets"></main>
@@ -190,9 +190,8 @@
     </svg>`;
   }
 
-  /* Stamp and Ace print on normal (white) sticker paper in black, red and cream. Holo is only
-     an accent: elements with class "foil" shimmer on screen and print as light grey, which
-     marks the area for the shop's holo foil (or leave them grey/silver). */
+  /* Stamp and Ace: black, red and cream ink on holo vinyl. Elements with class "foil" are the
+     holo parts: they shimmer on screen and go out white (no ink) in the PDF. */
   const CREAM = "#f5ede4";
   const foilDefs = (id) => holoDefs(id);
   const foil = (id) => `class="foil" fill="url(#${id}-holo)"`;
@@ -200,7 +199,7 @@
     `M${R},0 H${W - R} A${R},${R} 0 0 1 ${W},${R} V${H - R} A${R},${R} 0 0 1 ${W - R},${H} H${R} A${R},${R} 0 0 1 0,${H - R} V${R} A${R},${R} 0 0 1 ${R},0 Z`;
 
   /* ---------- postage stamp (45 × 60 mm) ----------
-     White scalloped stamp edge, red panel, KMSR across the top, a holo-foil star in the
+     Holo scalloped stamp edge, red panel, KMSR across the top, a holo star in the
      middle, and the order code set as the stamp's value. */
   function stampPath(W, H, r, step) {
     const along = (len) => {
@@ -225,7 +224,7 @@
     const SHAPE = stampPath(W, H, 13, 38);
     return `<svg class="sticker" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>${foilDefs(id)}</defs>
-      <path d="${SHAPE}" fill="#fff"/>
+      <path ${foil(id)} d="${SHAPE}"/>
       <path class="edge" d="${SHAPE}" fill="none" stroke="#d9d0cc" stroke-width="2"/>
       <rect x="30" y="30" width="${W - 60}" height="${H - 60}" fill="${RED}"/>
       <rect x="44" y="44" width="${W - 88}" height="${H - 88}" fill="none" stroke="${CREAM}" stroke-width="3"/>
@@ -244,7 +243,7 @@
 
   /* ---------- Ace of Stars (50 × 70 mm) ----------
      A small KMSR / ITB on top, the red star in the middle, a small code + BIRU DAUN at the foot. The "A"
-     indices and the thin frame are the only foil. */
+     indices and the thin frame are the only holo. */
   function aceCard(code, id) {
     const W = 500, H = 700;
     const SHAPE = roundRect(W, H, 30);
@@ -269,11 +268,136 @@
     </svg>`;
   }
 
+  // w × h in mm
   const DESIGNS = {
-    ticket: { cls: "d-ticket", size: "45×90 mm", make: verticalTicket },
-    stamp: { cls: "d-stamp", size: "45×60 mm", make: postageStamp, perSheet: 16 },
-    ace: { cls: "d-card", size: "50×70 mm", make: aceCard },
+    ticket: { w: 45, h: 90, make: verticalTicket },
+    stamp: { w: 45, h: 60, make: postageStamp },
+    ace: { w: 50, h: 70, make: aceCard },
   };
+  const TYPES = ["ticket", "stamp", "ace"];
+
+  // A3/A3+ get a 10 mm margin (room for the cutter's registration marks) and 3 mm gaps.
+  const PAPERS = {
+    a4: { w: 210, h: 297, name: "A4", margin: 6, gap: 3 },
+    a3: { w: 420, h: 297, name: "A3", margin: 10, gap: 3 },
+    a3plus: { w: 480, h: 320, name: "A3+", margin: 10, gap: 3 },
+  };
+
+  // A4 single designs keep their hand-tuned grids: cols, rows, column gap, row gap, top.
+  const A4_GRIDS = {
+    ticket: [4, 3, 6, 8, 5.5],
+    stamp: [4, 4, 6, 9, 12],
+    ace: [3, 4, 8, 4, 2.5],
+  };
+
+  // Slots for one design in a grid, centred across the sheet.
+  function gridSlots(paper, type, cols, rows, colGap, rowGap, top) {
+    const { w, h } = DESIGNS[type];
+    const x0 = (paper.w - (cols * w + (cols - 1) * colGap)) / 2;
+    const y0 = top != null ? top : (paper.h - (rows * h + (rows - 1) * rowGap)) / 2;
+    const slots = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      slots.push({ type, x: x0 + c * (w + colGap), y: y0 + r * (h + rowGap) });
+    }
+    return slots;
+  }
+
+  function fitCount(len, size, gap) { return Math.max(0, Math.floor((len + gap) / (size + gap))); }
+
+  // Sets: fill the sheet with columns, each a stack of tickets, stamps and Aces, and pick the
+  // combination of columns with the most complete sets (one of each design).
+  function packSets(paper) {
+    const W = paper.w - 2 * paper.margin, H = paper.h - 2 * paper.margin, g = paper.gap;
+    const stacks = [];
+    for (let t = 0; t <= 5; t++) for (let s = 0; s <= 6; s++) for (let a = 0; a <= 5; a++) {
+      const n = t + s + a;
+      const height = t * 90 + s * 60 + a * 70 + (n - 1) * g;
+      if (!n || height > H || height + g + 60 <= H) continue; // too tall, or a stamp still fits under it
+      stacks.push({ t, s, a, w: a ? 50 : 45, height });
+    }
+    let best = null;
+    const pick = [];
+    (function walk(from, width, t, s, a) {
+      const sets = Math.min(t, s, a);
+      if (sets && (!best || sets > best.sets || (sets === best.sets && pick.length < best.cols.length))) {
+        best = { sets, cols: pick.slice() };
+      }
+      for (let i = from; i < stacks.length; i++) {
+        const st = stacks[i];
+        const nw = width + (pick.length ? g : 0) + st.w;
+        if (nw > W) continue;
+        pick.push(st);
+        walk(i, nw, t + st.t, s + st.s, a + st.a);
+        pick.pop();
+      }
+    })(0, 0, 0, 0, 0);
+    if (!best) return { slots: [], sets: 0 };
+
+    // tidy: ticket-heavy columns first; inside a column, tickets on top, then Aces, then stamps
+    const cols = best.cols.slice().sort((p, q) => q.t - p.t || q.a - p.a);
+    const blockW = cols.reduce((sum, c) => sum + c.w, 0) + (cols.length - 1) * g;
+    const blockH = Math.max(...cols.map((c) => c.height));
+    let x = (paper.w - blockW) / 2;
+    const y0 = (paper.h - blockH) / 2;
+    const slots = [];
+    cols.forEach((c) => {
+      let y = y0;
+      [["ticket", c.t], ["ace", c.a], ["stamp", c.s]].forEach(([type, n]) => {
+        for (let i = 0; i < n; i++) {
+          // a 45 mm design in a 50 mm (Ace) column sits in the middle
+          slots.push({ type, x: x + (c.w - DESIGNS[type].w) / 2, y });
+          y += DESIGNS[type].h + g;
+        }
+      });
+      x += c.w + g;
+    });
+    // keep exactly `sets` of each design; spare slots stay empty
+    const kept = [];
+    TYPES.forEach((type) => kept.push(...slots.filter((sl) => sl.type === type).slice(0, best.sets)));
+    return { slots: kept, sets: best.sets };
+  }
+
+  // { slots, perSheet }: perSheet is how many codes one sheet takes.
+  const layoutCache = {};
+  function layout(paperKey, design) {
+    const key = paperKey + "/" + design;
+    if (layoutCache[key]) return layoutCache[key];
+    const paper = PAPERS[paperKey];
+    let out;
+    if (design === "set") {
+      const p = packSets(paper);
+      out = { slots: p.slots, perSheet: p.sets };
+    } else if (paperKey === "a4") {
+      const [cols, rows, cg, rg, top] = A4_GRIDS[design];
+      out = { slots: gridSlots(paper, design, cols, rows, cg, rg, top) };
+    } else {
+      const { w, h } = DESIGNS[design];
+      const cols = fitCount(paper.w - 2 * paper.margin, w, paper.gap);
+      const rows = fitCount(paper.h - 2 * paper.margin, h, paper.gap);
+      out = { slots: gridSlots(paper, design, cols, rows, paper.gap, paper.gap) };
+    }
+    if (!out.perSheet) out.perSheet = out.slots.length;
+    return (layoutCache[key] = out);
+  }
+
+  // Made-up codes in the site's format (KM- + 6 base-36), from a fixed seed so they stay put.
+  function madeUpCodes(count, taken) {
+    let seed = 20261101;
+    const rnd = () => {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const ABC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const out = [];
+    while (out.length < count) {
+      let c = "KM-";
+      for (let i = 0; i < 6; i++) c += ABC[Math.floor(rnd() * 36)];
+      if (!taken.has(c)) { taken.add(c); out.push(c); }
+    }
+    return out;
+  }
 
   // a long code is squeezed to fit instead of running off the sticker
   function fitCodes() {
@@ -289,8 +413,12 @@
 
   const ta = document.getElementById("codes");
   const sel = document.getElementById("design");
+  const paperSel = document.getElementById("paper");
+  const fillBox = document.getElementById("fill");
+  const fillNum = document.getElementById("fillsheets");
   const sheetsEl = document.getElementById("sheets");
   const countEl = document.getElementById("count");
+  const pageStyle = document.head.appendChild(document.createElement("style"));
 
   function codes() {
     const seen = new Set();
@@ -299,39 +427,72 @@
   }
 
   function render() {
-    const list = codes();
-    const d = DESIGNS[sel.value] || DESIGNS.ticket;
-    try { localStorage.setItem("kmsr-sticker-codes", ta.value); localStorage.setItem("kmsr-sticker-design", sel.value); } catch (e) {}
-    const PER_SHEET = d.perSheet || 12;
-    const total = Math.max(1, Math.ceil(list.length / PER_SHEET));
+    const paper = PAPERS[paperSel.value];
+    const L = layout(paperSel.value, sel.value);
+    const fillSheets = Math.max(1, Math.min(50, Number(fillNum.value) || 10));
+    try {
+      localStorage.setItem("kmsr-sticker-codes", ta.value);
+      localStorage.setItem("kmsr-sticker-design", sel.value);
+      localStorage.setItem("kmsr-sticker-paper", paperSel.value);
+      localStorage.setItem("kmsr-sticker-fill", fillBox.checked ? String(fillSheets) : "");
+    } catch (e) {}
+
+    const real = codes();
+    let list = real;
+    if (fillBox.checked) {
+      const want = fillSheets * L.perSheet;
+      if (want > real.length) list = real.concat(madeUpCodes(want - real.length, new Set(real)));
+    }
+
+    pageStyle.textContent = `@page { size: ${paper.w}mm ${paper.h}mm; margin: 0; }`;
+    const total = Math.max(1, Math.ceil(list.length / L.perSheet));
     const pages = [];
     for (let p = 0; p < total; p++) {
-      const chunk = list.slice(p * PER_SHEET, (p + 1) * PER_SHEET);
-      pages.push(`<div class="sheet ${d.cls}">${chunk.map((c, i) => d.make(c, "s" + (p * PER_SHEET + i))).join("")}
-        <span class="sheet__foot">KMSR holo stickers · design ${sel.value} · sheet ${p + 1}/${total} · ${chunk.length} pcs · ${d.size} · magenta = cut, do not print<span class="layer"></span></span></div>`);
+      const chunk = list.slice(p * L.perSheet, (p + 1) * L.perSheet);
+      // single design: code i → slot i; set: code i → the i-th slot of each design
+      const seen = {};
+      const html = L.slots.map((sl) => {
+        const i = sel.value === "set" ? (seen[sl.type] = (seen[sl.type] || 0) + 1) - 1 : (seen.n = (seen.n || 0) + 1) - 1;
+        const code = chunk[i];
+        if (!code) return "";
+        const d = DESIGNS[sl.type];
+        return `<div class="slot" style="left:${sl.x}mm;top:${sl.y}mm;width:${d.w}mm;height:${d.h}mm">${d.make(code, `s${p}-${sl.type}-${i}`)}</div>`;
+      }).join("");
+      pages.push(`<div class="sheet" style="width:${paper.w}mm;height:${paper.h}mm">${html}</div>`);
     }
     sheetsEl.innerHTML = pages.join("");
+    sheetsEl.style.zoom = String(Math.min(1, (innerWidth - 40) / (paper.w * 96 / 25.4)));
     fitCodes();
-    countEl.textContent = `${list.length} sticker${list.length === 1 ? "" : "s"} · ${Math.ceil(list.length / PER_SHEET) || 0} A4 sheet(s)`;
+
+    const per = sel.value === "set" ? `${L.perSheet} sets (${L.slots.length} stickers)` : `${L.perSheet} stickers`;
+    const made = list.length - real.length;
+    countEl.textContent = `${list.length} code${list.length === 1 ? "" : "s"}` + (made > 0 ? ` (${made} made up)` : "") +
+      ` · ${total} ${paper.name} sheet${total === 1 ? "" : "s"} · ${per} per sheet`;
+    document.getElementById("pdfnote").textContent = `PDF: ${paper.name} · scale 100% · margins none`;
   }
 
   const params = new URLSearchParams(location.search);
   try {
     ta.value = localStorage.getItem("kmsr-sticker-codes") || "";
-    sel.value = localStorage.getItem("kmsr-sticker-design") || "ticket";
+    sel.value = localStorage.getItem("kmsr-sticker-design") || "set";
+    paperSel.value = localStorage.getItem("kmsr-sticker-paper") || "a3plus";
+    const f = localStorage.getItem("kmsr-sticker-fill");
+    if (f) { fillBox.checked = true; fillNum.value = f; }
   } catch (e) {}
   if (params.get("codes")) ta.value = params.get("codes").split(",").join("\n");
   if (params.get("design")) sel.value = params.get("design");
-  if (!DESIGNS[sel.value]) sel.value = "ticket";
+  if (params.get("paper")) paperSel.value = params.get("paper");
+  if (params.get("fill")) { fillBox.checked = true; fillNum.value = params.get("fill"); }
+  if (!sel.value) sel.value = "set";
+  if (!PAPERS[paperSel.value]) paperSel.value = "a3plus";
   if (!ta.value) ta.value = "KM-0J4J0W\nKM-YNTN15\nKM-2MYTHX";
   if (params.has("nocut")) { document.body.classList.remove("cuts-on"); document.getElementById("cuts").checked = false; }
-  if (params.has("foil")) { document.body.classList.add("foil-only"); document.getElementById("foilonly").checked = true; }
 
-  ta.addEventListener("input", render);
-  sel.addEventListener("change", render);
+  [ta, fillNum].forEach((el) => el.addEventListener("input", render));
+  [sel, paperSel, fillBox].forEach((el) => el.addEventListener("change", render));
+  addEventListener("resize", render);
   document.getElementById("holo").addEventListener("change", (e) => document.body.classList.toggle("holo-on", e.target.checked));
   document.getElementById("cuts").addEventListener("change", (e) => document.body.classList.toggle("cuts-on", e.target.checked));
-  document.getElementById("foilonly").addEventListener("change", (e) => document.body.classList.toggle("foil-only", e.target.checked));
   document.getElementById("print").addEventListener("click", () => window.print());
 
   // holo sheen follows the pointer (screen only)

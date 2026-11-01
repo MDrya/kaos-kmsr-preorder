@@ -136,35 +136,30 @@ Then open http://localhost:5173.
 ## Holo stickers (one per order code)
 
 Open `tools/stickers.html` (locally: `http://localhost:5173/tools/stickers.html`, or on the live site
-`/tools/stickers.html`). It makes one sticker per order code (12 per A4 sheet, 16 for the stamp) in three designs
-(pick with the **Design** menu, or `?design=ticket|stamp|ace`):
+`/tools/stickers.html`). Three designs, all printed on **holographic vinyl**:
 
 - **Holo ticket** (4.5 × 9 cm): black top with a big red star, KMSR and ITB knocked out (holo),
   and a bare-holo stub with the order code, a barcode of the code (Google Lens reads it) and BIRU DAUN.
-- **Postage stamp** (4.5 × 6 cm): white scalloped stamp, red panel, KMSR / ITB on top, a holo-foil star,
+- **Postage stamp** (4.5 × 6 cm): holo scalloped edge, red panel, KMSR / ITB on top, a holo star,
   the code and BIRU DAUN at the bottom.
-- **Ace of Stars** (5 × 7 cm): black playing card, small KMSR / ITB on top, red star in the middle, holo-foil "A" corners and frame,
-  a small code and BIRU DAUN at the foot.
+- **Ace of Stars** (5 × 7 cm): black playing card, small KMSR / ITB on top, red star in the middle, holo "A" corners
+  and frame, a small code and BIRU DAUN at the foot.
+
+**Design → All three, one set per code** puts a ticket, a stamp and an Ace of the same code on one sheet
+(the buyer picks one free and can buy the other two). **Paper**: A3+ landscape (48 × 32 cm, 11 sets = 33 stickers
+per sheet), A3 landscape (8 sets), or A4. A single design fills the sheet with just that shape.
+**Fill to N sheets with made-up codes** tops the pasted codes up with made-up ones (same `KM-XXXXXX` format, always
+the same list) so the last sheet isn't half empty — e.g. 10 sheets of A3+ = 110 sets.
 
 1. **Get the codes**: in the Sheet, a spare cell:
    `=UNIQUE(FILTER(Orders!B2:B, Orders!L2:L="Confirmed"))` (use `;` instead of `,` if your Sheet is Indonesian).
-   Copy that column and paste it into the tool's box.
-2. **Export**: click *Print / save PDF* → Save as PDF, **A4, scale 100%, margins none**.
+   Copy that column and paste it into the tool's box. Real codes come first, made-up ones after.
+2. **Export**: click *Print / save PDF* → Save as PDF, **scale 100%, margins none** (the paper size is set by the tool).
    Make one PDF with the cut line on (for the die cut) and, if the shop asks, one with it off.
 3. **Brief for the print shop**:
-   - Holo ticket:
-     > Cetak di **stiker hologram silver**, **tanpa tinta putih** — area yang tidak dicetak memang untuk efek hologram
-     > (tulisan KMSR/ITB dan bagian bawah tiket). Ukuran 4,5 × 9 cm, **kiss-cut mengikuti garis magenta**
-     > (garis magenta jangan ikut dicetak). Tinta: hitam + merah (bintang).
-   - Postage stamp / Ace of Stars: send **two PDFs** of the same codes, same order:
-     1. **Colour file**: the normal export (the light-grey areas are where the foil goes).
-     2. **Foil file**: tick **Foil layer only** (or open with `&foil`) and export again. Only the foil
-        shapes are left, in solid black: the stamp's star, the Ace's "A" corners and frame.
+   > Cetak di **vinyl hologram**, ukuran **A3+ (32 × 48 cm)**, 10 lembar. **Tanpa tinta putih**: area **putih** di file
+   > = tidak dicetak, jadi hologram. Tinta: hitam + merah (+ krem). **Kiss-cut mengikuti garis magenta**
+   > (garis magenta jangan ikut dicetak).
 
-     > Cetak di **stiker vinyl/chromo putih** + **hot print foil hologram**. Ada 2 file:
-     > **file warna** dan **file foil** (area **hitam** di file foil = foil hologram; posisinya sama persis dengan
-     > area abu-abu di file warna). Ukuran prangko 4,5 × 6 cm, kartu 5 × 7 cm,
-     > **kiss-cut mengikuti garis magenta** (garis magenta jangan ikut dicetak).
-     > Kalau tidak bisa foil, area abu-abu cetak silver saja.
-
+Red and black printed straight on holo vinyl look a little metallic; that's normal without a white underlayer.
 The pasted codes stay in your browser only; nothing is saved to the site.
