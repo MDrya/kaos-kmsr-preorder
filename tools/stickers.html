@@ -242,8 +242,8 @@
   }
 
   /* ---------- Ace of Stars (50 × 70 mm) ----------
-     A small KMSR / ITB on top, the red star in the middle, a small code + BIRU DAUN at the foot. The "A"
-     indices and the thin frame are the only holo. */
+     A small KMSR / ITB on top, the red star in the middle, a small code + BIRU DAUN at the foot.
+     All the lettering, the "A" indices and the thin frame are holo; only the stars are red. */
   function aceCard(code, id) {
     const W = 500, H = 700;
     const SHAPE = roundRect(W, H, 30);
@@ -255,15 +255,17 @@
       <rect x="18" y="18" width="${W - 36}" height="${H - 36}" rx="20" fill="none" stroke="url(#${id}-holo)" stroke-width="4" class="foil-stroke"/>
       <g ${foil(id)}>${index}<g transform="rotate(180 250 350)">${index}</g></g>
       <g fill="${RED}">${star(74, 126, 0.4)}<g transform="rotate(180 250 350)">${star(74, 126, 0.4)}</g></g>
-      <text x="${W / 2}" y="62" text-anchor="middle" font-family="Archivo" font-weight="900" font-size="22"
-            letter-spacing="1" fill="${CREAM}" style="font-stretch:125%">KMSR</text>
-      <text x="${W / 2}" y="84" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="9"
-            letter-spacing="4.5" fill="${CREAM}" style="font-stretch:125%">ITB</text>
+      <g ${foil(id)}>
+        <text x="${W / 2}" y="62" text-anchor="middle" font-family="Archivo" font-weight="900" font-size="22"
+              letter-spacing="1" style="font-stretch:125%">KMSR</text>
+        <text x="${W / 2}" y="84" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="9"
+              letter-spacing="4.5" style="font-stretch:125%">ITB</text>
+        <text class="code" data-max="190" x="${W / 2}" y="631" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
+              font-size="21" letter-spacing=".5">${esc(code)}</text>
+        <text x="${W / 2}" y="654" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="9"
+              letter-spacing="4.5" style="font-stretch:125%">BIRU DAUN</text>
+      </g>
       <g fill="${RED}">${star(W / 2, 350, 2.1)}</g>
-      <text class="code" data-max="190" x="${W / 2}" y="631" text-anchor="middle" font-family="JetBrains Mono" font-weight="800"
-            font-size="21" letter-spacing=".5" fill="${CREAM}">${esc(code)}</text>
-      <text x="${W / 2}" y="654" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="9"
-            letter-spacing="4.5" fill="${CREAM}" style="font-stretch:125%">BIRU DAUN</text>
       <path class="cut" d="${SHAPE}" fill="none" stroke="#ff00ff" stroke-width="2.5"/>
     </svg>`;
   }
